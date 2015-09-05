@@ -7,6 +7,12 @@ function parseTree(tree) {
   return parseVerbPhrase(firstVP);
 }
 
+
+export var INTENT = {
+    PLACE_ORDER: "PLACE_ORDER"
+};
+
+
 /**
  * Find the first verb phrase in a tree
  */
@@ -19,7 +25,7 @@ function parseVerbPhrase(vp) {
 
   _.each(vp, function(element, key) {
     if (_.has(element, "V") && _(["mua", "ban"]).contains(element["V"])) {
-      result.intent = "dat_lenh";
+      result.intent = INTENT.PLACE_ORDER;
       result.side = element["V"];
 
       // Find the amount and symbol
@@ -51,7 +57,6 @@ function parseVerbPhrase(vp) {
 
   return result;
 }
-
 
 
 $.get("/scripts/grammar.txt").done((grammar) => {
