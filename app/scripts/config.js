@@ -20,6 +20,7 @@ System.config({
     "jquery": "github:components/jquery@2.1.4",
     "microtemplates": "github:paulmillr/microtemplates@0.1.0",
     "pegjs": "npm:pegjs@0.9.0",
+    "underscore": "npm:underscore@1.8.3",
     "github:jspm/nodelibs-process@0.1.1": {
       "process": "npm:process@0.10.1"
     },
