@@ -11,15 +11,20 @@ import template from 'microtemplates';
 
 var $textarea, $conversation, $form, userMessageTmpl, botMessageTmpl,
 
+	renderHumanMessage = function(message) {
+		var msgHtml = template(userMessageTmpl, {message: message});
+		$textarea.val('');
+		$conversation.append(msgHtml);
+		$("html, body").animate({ scrollTop: $(document).height() }, "slow"); // scroll to bottom
+	},
+
 	bindUserInput = function() {
 		$form.on('submit', function(e) {
-			PubSub.publish('/raw', {
-				message: $textarea.val()
+			var message = $textarea.val();
+			renderHumanMessage(message);
+			PubSub.publish('/human-raw', {
+				message: message
 			});
-			var msgHtml = template(userMessageTmpl, {message: $textarea.val() });
-			$textarea.val('');
-			$conversation.append(msgHtml);
-			$("html, body").animate({ scrollTop: $(document).height() }, "slow"); // scroll to bottom
 			e.preventDefault();
 		});
 	},
@@ -43,7 +48,7 @@ var $textarea, $conversation, $form, userMessageTmpl, botMessageTmpl,
 module.exports = {
 	init: function() {
 		$form = $('#user-input');
-		$textarea = $('textarea', $form);
+		$textarea = $('textarea', $form).focus();
 		$conversation = $('#conversation');
 		userMessageTmpl = $('#human-message-tmpl').html();
 		botMessageTmpl = $('#bot-message-tmpl').html();
