@@ -1,0 +1,52 @@
+html {
+	background: #363636;
+	color: #fff;
+	font-family: Helvetica, Arial;
+}
+
+header {
+	background: #f7941d;
+	height: 40px;
+	position: fixed;
+	width: 100%;
+}
+
+#main {
+	padding: 40px 0 0;
+}
+
+#user-input {
+	background: #555;
+	bottom: 0;
+	padding: 10px;
+	position: fixed;
+	width: 100%;
+
+	.inner {
+		max-width: 600px;
+		margin: auto;
+	}
+
+	textarea {
+		background: rgba(255, 255, 255, 0.3);
+		border: none;
+		border-radius: 3px;
+		color: #fff;
+		font-family: Helvetica, Arial;
+		padding: 5px;
+		min-height: 80px;
+		width:80%;
+
+		&:focus {
+			outline: none;
+		}
+	}
+
+	button {
+		background: #f7941d;
+		border: none;
+		border-radius: 3px;
+		color: #fff;
+		padding: 4px 20px;
+	}
+}

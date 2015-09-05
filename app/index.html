@@ -20,22 +20,24 @@
 		<!-- build:js scripts/vendor/modernizr.js -->
 		<script src="bower_components/modernizr/modernizr.js"></script>
 		<!-- endbuild -->
-		
+
 	</head>
 	<body>
 		<!--[if lt IE 10]>
 			<p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
 		<![endif]-->
-		
+
+		<header></header>
+
 		<div id="main">
 			<div id="conversation">
 				
 			</div>
-			<form id="input">
-				<textarea>
-					
-				</textarea>
-				<button type="submit"></button>
+			<form id="user-input">
+				<div class="inner">
+					<textarea></textarea>
+					<button type="submit">Gửi</button>
+				</div>
 			</form>
 		</div>
 
@@ -47,7 +49,13 @@
 		<!-- endbuild -->
 
 		<!-- build:js scripts/main.js -->
-		<script src="scripts/main.js"></script>
+
+		<script src="/jspm_packages/system.js"></script>
+		<script src="/scripts/config.js"></script>
+		<script>
+			System.import('/scripts/main');
+		</script>
+
 		<!-- endbuild -->
 
 		<!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
