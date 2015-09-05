@@ -1,6 +1,6 @@
 // jshint devel:true
+import DISPATCHER from "./pubsub";
+import {parser} from "./parser";
 
 
-import {add} from "./module";
-
-console.log(add(1, 2));
+parser.parse("mua 10k VND gia 12k");

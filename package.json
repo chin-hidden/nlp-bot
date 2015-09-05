@@ -52,6 +52,9 @@
       "packages": "app/jspm_packages"
     },
     "configFile": "app/scripts/config.js",
+    "dependencies": {
+      "pegjs": "npm:pegjs@^0.9.0"
+    },
     "devDependencies": {
       "babel": "npm:babel-core@^5.8.22",
       "babel-runtime": "npm:babel-runtime@^5.8.20",
