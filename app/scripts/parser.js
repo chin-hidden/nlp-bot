@@ -1,4 +1,5 @@
 import PEG from "pegjs/lib/peg";
+import DISPATCHER from "./pubsub";
 
 var grammar = `
 start
@@ -29,3 +30,19 @@ _ "whitespace" = [ \\t\\n\\r]*
 `;
 
 export var parser = PEG.buildParser(grammar);
+
+DISPATCHER.subscribe("/raw", (payload) => {
+    console.log("hoho");
+    try {
+        var parsed = parser.parse(payload.message);
+        DISPATCHER.publish("/processed", {
+            status: "ok",
+            parsed: parsed,
+        });
+    } catch (e) {
+        DISPATCHER.publish("/processed", {
+            status: "parse-error",
+            message: "lol",
+        });
+    }
+});
