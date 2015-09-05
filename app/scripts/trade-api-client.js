@@ -26,7 +26,7 @@ export class TradeApiClient {
   ajax(options, callback) {
     var defaults = {
       headers: {
-        "X-AUTH-TOKEN": this.accessToken;
+        "X-AUTH-TOKEN": this.accessToken
       }
     };
 
