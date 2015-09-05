@@ -41,7 +41,7 @@ P =
 CLASSIFIER = CLASSIFIER:("con") _ { return {CLASSIFIER: CLASSIFIER}; }
 
 NOUN =
-  NOUN:("ma" / "VND" / "lenh" / "so" / "bac sy" / "co phieu" / "cp") _ { return {NOUN: NOUN}; }
+  NOUN:("ma" / "lenh" / "so" / "bac sy" / "co phieu" / "cp" / <%= stockSymbols %>) _ { return {NOUN: NOUN}; }
 
 ADJ =
   ADJ:("vua xong") { return {ADJ: ADJ}; }

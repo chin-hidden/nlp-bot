@@ -12,6 +12,11 @@ export var INTENT = {
     PLACE_ORDER: "PLACE_ORDER"
 };
 
+export var ORDER_SIDE = {
+    BUYING: "BUYING",
+    SELLING: "SELLING"
+}
+
 
 /**
  * Find the first verb phrase in a tree
@@ -26,7 +31,10 @@ function parseVerbPhrase(vp) {
   _.each(vp, function(element, key) {
     if (_.has(element, "V") && _(["mua", "ban"]).contains(element["V"])) {
       result.intent = INTENT.PLACE_ORDER;
-      result.side = element["V"];
+      result.side = {
+        "mua": ORDER_SIDE.BUYING,
+        "ban": ORDER_SIDE.SELLING
+      }[element["V"]];
 
       // Find the amount and symbol
       var firstNP = _.chain(vp).filter(function(el) { return _.has(el, "NP"); }).pluck("NP").first().value();
@@ -59,7 +67,18 @@ function parseVerbPhrase(vp) {
 }
 
 
-$.get("/scripts/grammar.txt").done((grammar) => {
+Promise.all([
+    $.get("/scripts/grammar.txt"),
+    $.get("http://priceservice.vndirect.com.vn/priceservice/company/snapshot/")
+]).then((values) => {
+    console.log("done")
+    var symbolInfos = values[1];
+
+    var codes = _.pluck(symbolInfos, "code");
+    '"' + codes.join('" / "') + '"';
+    var grammar = _.template(values[0])({ stockSymbols: '"' + codes.join('" / "') + '"' });
+
+    // TODO: this line takes a looooooooooooong time to finish!
     var parser = PEG.buildParser(grammar);
 
     DISPATCHER.subscribe("/human", (payload) => {
@@ -77,5 +96,4 @@ $.get("/scripts/grammar.txt").done((grammar) => {
             });
         }
     });
-})
-
+});
