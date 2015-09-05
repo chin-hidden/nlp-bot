@@ -9,12 +9,16 @@
 import PubSub from "./pubsub";
 import template from 'microtemplates';
 
-var $textarea, $conversation, $form, userMessageTmpl, botMessageTmpl,
+var $textarea, $conversation, $form, userMessageTmpl, botMessageTmpl, botMessagesQueue,
 
 	renderHumanMessage = function(message) {
 		var msgHtml = template(userMessageTmpl, {message: message});
 		$textarea.val('');
 		$conversation.append(msgHtml);
+		scrollToBottom();
+	},
+
+	scrollToBottom = function() {
 		$("html, body").animate({ scrollTop: $(document).height() }, "slow"); // scroll to bottom
 	},
 
@@ -42,9 +46,27 @@ var $textarea, $conversation, $form, userMessageTmpl, botMessageTmpl,
 	handleBotMessages = function() {
 		PubSub.subscribe('/fulfilled', function(data) {
 			var now = new Date();
-			var msgHtml = template(botMessageTmpl, {message: data.message, botIndex: data.botIndex, time: `${now.getHours()}:${now.getMinutes()}` });
-			$conversation.append(msgHtml);
+			var $thisMsg = $( template(botMessageTmpl, {message: data.message, botIndex: data.botIndex, time: `${now.getHours()}:${now.getMinutes()}` }) );
+			botMessagesQueue.push($thisMsg);
+			if (botMessagesQueue.length == 1) {
+				// if the queue is previously empty, then start a new queue
+				startBotMessagesQueue();
+			}
 		});
+	},
+
+	startBotMessagesQueue = function() {
+		var $thisMsg = botMessagesQueue[0];
+		$conversation.append($thisMsg.addClass('typing'));
+		scrollToBottom();
+		setTimeout(function() {
+			$thisMsg.removeClass('typing');
+			scrollToBottom();
+			botMessagesQueue.shift();
+			if (botMessagesQueue.length > 0) {
+				startBotMessagesQueue();
+			}
+		}, 1200);
 	};
 
 module.exports = {
@@ -54,6 +76,7 @@ module.exports = {
 		$conversation = $('#conversation');
 		userMessageTmpl = $('#human-message-tmpl').html();
 		botMessageTmpl = $('#bot-message-tmpl').html();
+		botMessagesQueue = [];
 
 		bindUserInput();
 		triggerSubmitOnHittingEnter();

@@ -1,0 +1,32 @@
+
+.loader {
+	margin: 0 auto;
+	width: 60px;
+	text-align: center;
+
+	span {
+		animation: sk-bouncedelay 1.2s infinite ease-in-out both;
+		background-color: rgba(255, 255, 255, 0.7);
+		height: 12px;
+		border-radius: 100%;
+		display: inline-block;
+		margin: 0 1px;
+		width: 12px;
+	}
+
+	span:nth-child(1) {
+		animation-delay: -0.32s;
+	}
+
+	span:nth-child(2) {
+		animation-delay: -0.16s;
+	}
+}
+
+@keyframes sk-bouncedelay {
+	0%, 80%, 100% { 
+		transform: scale(0);
+	} 40% { 
+		transform: scale(1.0);
+	}
+}
