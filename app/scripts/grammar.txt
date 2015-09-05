@@ -1,4 +1,5 @@
 {
+
   function removeSpace(arr) {
     for (var i = 0; i < arr.length; i++) {
       if (arr[i] === " ") {
@@ -9,30 +10,46 @@
 }
 
 S =
-  (SUBJ? VP / NP) EXCLAM?
+  S:(SUBJ_NP / SUBJ_VP / SUBJ / YES_NO) { return ["S", S]; }
 
-SUBJ = NP
+SUBJ_NP = SUBJ? NP EXCLAM?
+SUBJ_VP = SUBJ? VP EXCLAM?
+
+YES_NO = YES_NO:(YES / NO) { return ["YES_NO", YES_NO]; }
+
+YES =
+  ("dung roi" / "dung" / "uh" / "okay" / "ok" / "yup" / "yeah" / "yes") _
+
+NO =
+  ("khong phai" / "khong" / "nham roi")
+
+SUBJ = SUBJ:NP { return ["SUBJ", SUBJ]; }
 
 // verb phrase
-VP = VP:(PP? V PP? NP? PP?) { return {VP: VP}; }
+VP
+  = VP:(PP? V PP? NP? PP?) { return ["VP", VP]; }
 
 // noun phrase
-NP = NP:(NUMBER? CLASSIFIER? NOUN+ ADJ* / PRP / NUMBER) _ { return {NP: NP}; }
+NP
+  = NP:(NUMBER? CLASSIFIER? (NOUN / PRP)+ ADJ* / NUMBER) _
+  {
+    return ["NP", NP];
+  }
 
 // động từ tình thái
 VTT = VTT:("muon") _
 
 // động từ hành động
 VHD =
-  VHD:("dat mua" / "mua" / "ban" / "huy" / "sua") _ { return VHD; }
+  VHD:("la" / "dat mua" / "mua" / "ban" / "huy" / "sua" / "chao") _ { return VHD; }
 
-V = VTT? V:VHD { return {V: V}; }
+V = VTT? V:VHD { return ["V", V]; }
 
 // Prepositional phrase
 PP =
-  PP:(P / ("cho" $_ PRP) / "gia" $_ NUMBER) _ {
+  PP:(P / "cho" $_ PRP / "gia" $_ NUMBER) _ {
   removeSpace(PP);
-  return {PP: PP};
+  return ["PP", PP];
 }
 
 P =
@@ -41,21 +58,21 @@ P =
 CLASSIFIER = CLASSIFIER:("con") _ { return {CLASSIFIER: CLASSIFIER}; }
 
 NOUN =
-  NOUN:("ma" / "lenh" / "so" / "bac sy" / "co phieu" / "cp" / <%= stockSymbols %>) _ { return {NOUN: NOUN}; }
+  NOUN:("gia" / "ma" / "lenh" / "so" / "bac sy" / "co phieu" / "cp" / <%= stockSymbols %>) _ { return ["NOUN", NOUN]; }
 
 ADJ =
-  ADJ:("vua xong") { return {ADJ: ADJ}; }
+  ADJ:("vua xong" / "dep") _ { return ["ADJ", ADJ]; }
 
 NUMBER
-    = NUMBER:integer $_ "ngan" _ { NUMBER *= 1000; return {NUMBER: NUMBER} }
-    / NUMBER:integer _ { return {NUMBER: NUMBER}; }
+    = NUMBER:integer $_ "ngan" _ { NUMBER *= 1000; return ["NUMBER", NUMBER]; }
+    / NUMBER:integer _ { return ["NUMBER", NUMBER]; }
 
 // Pronoun
 PRP =
-  prp:("toi" / "tao" / "anh" / "em" / "chi") _ { return prp; }
+  PRP:("toi" / "tao" / "anh" / "em" / "chi" / "minh" / "bo may" / "ba" / "co" / "di" / "chu" / "bac" / "chau" / "may") _ { return ["PRP", PRP]; }
 
 EXCLAM =
-  EXCLAM:("nhe"/ "voi") { return {EXCLAM: EXCLAM}; }
+  EXCLAM:("nhe"/ "voi" / "day") { return ["EXCLAM", EXCLAM]; }
 
 _ = [ \t\n\r]*
 __ = [ \t\n\r]+
