@@ -9,7 +9,7 @@
 import PubSub from "./pubsub";
 import template from 'microtemplates';
 
-var $textarea, $conversation, $form, userMessageTmpl,
+var $textarea, $conversation, $form, userMessageTmpl, botMessageTmpl,
 
 	bindUserInput = function() {
 		$form.on('submit', function(e) {
@@ -19,6 +19,7 @@ var $textarea, $conversation, $form, userMessageTmpl,
 			var msgHtml = template(userMessageTmpl, {message: $textarea.val() });
 			$textarea.val('');
 			$conversation.append(msgHtml);
+			$("html, body").animate({ scrollTop: $(document).height() }, "slow"); // scroll to bottom
 			e.preventDefault();
 		});
 	},
@@ -30,6 +31,13 @@ var $textarea, $conversation, $form, userMessageTmpl,
 			}
 			return true;
 		});
+	},
+
+	handleBotMessages = function() {
+		PubSub.subscribe('/fulfilled', function(data) {
+			var msgHtml = template(botMessageTmpl, {message: data.message });
+			$conversation.append(msgHtml);
+		});
 	};
 
 module.exports = {
@@ -37,8 +45,11 @@ module.exports = {
 		$form = $('#user-input');
 		$textarea = $('textarea', $form);
 		$conversation = $('#conversation');
-		userMessageTmpl = $('#user-message-tmpl').html();
+		userMessageTmpl = $('#human-message-tmpl').html();
+		botMessageTmpl = $('#bot-message-tmpl').html();
+
 		bindUserInput();
 		triggerSubmitOnHittingEnter();
+		handleBotMessages();
 	}
 }
