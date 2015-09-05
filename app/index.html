@@ -31,7 +31,16 @@
 
 		<div id="main">
 			<div id="conversation">
-				
+				<script type="text/html" id="user-message-tmpl">
+					<blockquote class="human">
+						<%=message%>
+					</blockquote>
+				</script>
+				<script type="text/html" id="bot-message-tmpl">
+					<blockquote class="bot">
+						<%=message%>
+					</blockquote>
+				</script>
 			</div>
 			<form id="user-input">
 				<div class="inner">
