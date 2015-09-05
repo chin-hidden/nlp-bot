@@ -71,11 +71,9 @@ Promise.all([
     $.get("/scripts/grammar.txt"),
     $.get("http://priceservice.vndirect.com.vn/priceservice/company/snapshot/")
 ]).then((values) => {
-    console.log("done")
     var symbolInfos = values[1];
 
     var codes = _.pluck(symbolInfos, "code");
-    '"' + codes.join('" / "') + '"';
     var grammar = _.template(values[0])({ stockSymbols: '"' + codes.join('" / "') + '"' });
 
     // TODO: this line takes a looooooooooooong time to finish!
@@ -87,7 +85,7 @@ Promise.all([
             var result = parseTree(tree);
             DISPATCHER.publish("/processed", {
                 status: "ok",
-                parsed: result,
+                message: result,
             });
         } catch (e) {
             DISPATCHER.publish("/processed", {

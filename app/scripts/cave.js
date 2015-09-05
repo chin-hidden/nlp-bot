@@ -1,6 +1,7 @@
 import $ from "jquery";
 import PubSub from "./pubsub";
 import {TradeApiClient} from "./trade-api-client";
+import {INTENT} from "./parser";
 
 var botNames = [
         'Hayley Hồ Huyền', 
@@ -23,6 +24,31 @@ var botNames = [
         PubSub.publish('/fulfilled', {
             status: 'good',
             message: `Chào mừng quý khách đến với dịch vụ giao dịch qua chat của VNDIRECT! Em tên là ${getBotName()}. Em rất hân hạnh được phục vụ quý khách ngày hôm nay.`
+        });
+    },
+
+    listenToParser = function() {
+        PubSub.subscribe('/processed', function(event) {
+            console.log(INTENT);
+            if (event.status === "ok") {
+                console.log("here");
+                if (event.message.intent === INTENT.PLACE_ORDER) {
+                    var side = event.message.side;
+                    var symbol = event.message.symbol;
+                    var price = event.message.price;
+                    var amount = event.message.amount;
+
+                    PubSub.publish('/fulfilled', {
+                        status: 'good',
+                        message: `Quý khách muốn ${side} ${amount} mã ${symbol} với giá ${price} phải không ạ?`;
+                    });
+                }
+            } else {
+                PubSub.publish('/fulfilled', {
+                    status: 'bad',
+                    message: 'Xin lỗi, em không hiểu. Quý khách muốn đặt lệnh, sửa lệnh, xóa lệnh hay làm gì ạ?'
+                });
+            }
         });
     },
 
@@ -164,5 +190,5 @@ module.exports = {
         welcome();
         askForUsername();
         listenToHuman();
+        listenToParser();
     }
-}
