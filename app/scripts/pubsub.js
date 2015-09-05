@@ -20,6 +20,8 @@ export default (function(){
       };
     },
     publish: function(topic, info) {
+      console.log(topic, info);
+
       // If the topic doesn't exist, or there's no listeners in queue, just leave
       if(!hOP.call(topics, topic)) return;
 
