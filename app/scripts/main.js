@@ -1,10 +1,8 @@
 // jshint devel:true
-
-
-import * as lib from "./module";
+import DISPATCHER from "./pubsub";
+import {parser} from "./parser";
 import humanInterface from "./human-interface";
 
-console.log(lib.add(1, 2));
-console.log(lib.minus(6, 2));
+parser.parse("mua 10k VND gia 12k");
 
 humanInterface.init();

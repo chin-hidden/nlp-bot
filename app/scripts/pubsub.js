@@ -1,6 +1,6 @@
 // from http://davidwalsh.name/pubsub-javascript
 
-var events = (function(){
+export default (function(){
   var topics = {};
   var hOP = topics.hasOwnProperty;
 
