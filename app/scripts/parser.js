@@ -78,6 +78,7 @@ Promise.all([
 
     // TODO: this line takes a looooooooooooong time to finish!
     var parser = PEG.buildParser(grammar);
+    DISPATCHER.publish("/parser/ready");
 
     DISPATCHER.subscribe("/human", (payload) => {
         try {
