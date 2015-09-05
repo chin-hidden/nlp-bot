@@ -3,7 +3,7 @@ import DISPATCHER from "./pubsub";
 
 var grammar = `
 start
-    = action:action _ amount:number _ symbol:symbol _ "gia" _ price:number
+    = _ action:action _ amount:number _ symbol:symbol _ "gia" _ price:number _
     {
         return {
             action: action,
