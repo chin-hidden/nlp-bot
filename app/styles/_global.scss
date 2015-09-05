@@ -1,7 +1,9 @@
 html {
 	background: #363636;
-	color: #fff;
+	color: #eee;
 	font-family: Helvetica, Arial;
+	font-size: 13px;
+	line-height: 1.5;
 }
 
 header {
@@ -23,7 +25,7 @@ header {
 	width: 100%;
 
 	.inner {
-		max-width: 600px;
+		max-width: 500px;
 		margin: auto;
 	}
 
@@ -47,19 +49,19 @@ header {
 		border: none;
 		border-radius: 3px;
 		color: #fff;
-		padding: 4px 20px;
+		padding: 6px 20px;
 	}
 }
 
 #conversation {
-	max-width: 600px;
+	max-width: 500px;
 	padding: 20px 0 0;
 	margin: auto;
 
 	blockquote {
 		background: rgba(255, 255, 255, 0.1);
 		border-radius: 3px;
-		padding: 10px;
+		padding: 10px 14px;
 
 		&.human {
 			margin: 0 50px 20px 0;
