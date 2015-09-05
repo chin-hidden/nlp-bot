@@ -41,7 +41,8 @@ var $textarea, $conversation, $form, userMessageTmpl, botMessageTmpl,
 
 	handleBotMessages = function() {
 		PubSub.subscribe('/fulfilled', function(data) {
-			var msgHtml = template(botMessageTmpl, {message: data.message });
+			var now = new Date();
+			var msgHtml = template(botMessageTmpl, {message: data.message, botIndex: data.botIndex, time: `${now.getHours()}:${now.getMinutes()}` });
 			$conversation.append(msgHtml);
 		});
 	};
