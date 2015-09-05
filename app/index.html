@@ -4,7 +4,7 @@
 		<meta charset="utf-8">
 		<title>nlp bot</title>
 		<meta name="description" content="">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
 		<link rel="shortcut icon" href="/favicon.ico">
 		<link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -27,25 +27,40 @@
 			<p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
 		<![endif]-->
 
-		<header></header>
+		<header>
+			<span class="logo"></span>
+		</header>
 
 		<div id="main">
 			<div id="conversation">
 				<script type="text/html" id="human-message-tmpl">
 					<blockquote class="human">
-						<%=message%>
+						<div class="bubble">
+							<%=message%>
+						</div>
+						<p class="time"><%=time%></p>
 					</blockquote>
 				</script>
 				<script type="text/html" id="bot-message-tmpl">
-					<blockquote class="bot">
-						<%=message%>
+					<blockquote class="bot bot-<%=botIndex%>">
+						<div class="bubble">
+							<div class="content">
+								<%=message%>
+							</div>
+							<div class="loader">
+								<span></span><span></span><span></span>
+							</div>
+						</div>
+						<p class="time"><%=time%></p>
 					</blockquote>
 				</script>
 			</div>
 			<form id="user-input">
 				<div class="inner">
-					<textarea></textarea>
 					<button type="submit">Gửi</button>
+					<div class="textarea">
+						<textarea placeholder="Gửi thông điệp..."></textarea>
+					</div>
 				</div>
 			</form>
 		</div>

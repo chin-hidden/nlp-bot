@@ -5,27 +5,31 @@ import {TradeApiClient} from "./trade-api-client";
 import {INTENT} from "./parser";
 
 var botNames = [
-        'Hayley Hồ Huyền', 
-        'Maria Ốc Hương', 
-        'Lolita Hương Ly', 
-        'Kelly Kim Linh', 
-        'Jennifer Huệ', 
+        'Hayley Hồ Huyền',
+        'Maria Ốc Hương',
+        'Lolita Hương Ly',
+        'Kelly Kim Linh',
+        'Jennifer Huệ',
         'Tiffany Hồng Thuý',
         'Courtney Hạnh'],
-    username, password, vtosKeys, vtosChallenges, vtosAttemptCount,
-    tradeApiHelper, 
+    username, password, vtosKeys, vtosChallenges, vtosAttemptCount, botIndex,
+    tradeApiHelper, accountNo, pPower,
     state = {},
 
     getBotName = function() {
-        var index = Math.round(Math.random() * botNames.length);
-        console.log(index);
-        return botNames[index];
+        botIndex = Math.floor(Math.random() * botNames.length);
+        return botNames[botIndex];
     },
 
-    welcome = function() {
+    addCommasToNumber = function(number) {
+        return parseInt(number).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    },
+
+    speak = function(status, message) {
         PubSub.publish('/fulfilled', {
-            status: 'good',
-            message: `Chào mừng quý khách đến với dịch vụ giao dịch qua chat của VNDIRECT! Em tên là ${getBotName()}. Em rất hân hạnh được phục vụ quý khách ngày hôm nay.`
+            status: status,
+            message: message,
+            botIndex: botIndex
         });
     },
 
@@ -41,31 +45,22 @@ var botNames = [
         };
     },
 
+    welcome = function() {
+        speak('good', `Chào mừng quý khách đến với dịch vụ giao dịch qua chat của VNDIRECT! Em tên là ${getBotName()}. Em rất hân hạnh được phục vụ quý khách ngày hôm nay.`);
+    },
+
     listenToParser = function() {
         PubSub.subscribe('/processed', function(event) {
-            console.log(state);
             if (event.status === "ok") {
                 if (event.message.intent === INTENT.CONFIRM) {
-                    PubSub.publish('/fulfilled', {
-                        status: 'good',
-                        message: "Vâng, em đang thực hiện lệnh của quý khách ngay đây ạ!"
-                    });
+                    speak('good', "Vâng, em đang thực hiện lệnh của quý khách ngay đây ạ!");
                 } else if (event.message.intent === INTENT.DENY) {
-                    PubSub.publish('/fulfilled', {
-                        status: 'good',
-                        message: "Vâng, tùy quý khách ạ!"
-                    });
+                    speak('good', "Vâng, tùy quý khách ạ!");
                     resetState();
                 } else if (event.message.intent === INTENT.GREETING) {
-                    PubSub.publish('/fulfilled', {
-                        status: 'good',
-                        message: "Xin kính chào quý khách!"
-                    });
+                    speak('good', "Xin kính chào quý khách!");
                 } else if (event.message.intent === INTENT.GET_ATTENTION) {
-                    PubSub.publish('/fulfilled', {
-                        status: 'good',
-                        message: "Vâng, thưa quý khách!"
-                    });
+                    speak('good', "Vâng, thưa quý khách!");
                 } else if (event.message.intent === INTENT.PLACE_ORDER) {
                     state.currentOperation = event.message.intent;
 
@@ -83,10 +78,7 @@ var botNames = [
                     }
                 }
             } else {
-                PubSub.publish('/fulfilled', {
-                    status: 'bad',
-                    message: 'Xin lỗi, em không hiểu. Quý khách muốn đặt lệnh, sửa lệnh, xóa lệnh hay làm gì ạ?'
-                });
+                speak('bad', 'Xin lỗi, em không hiểu. Quý khách muốn đặt lệnh, sửa lệnh, xóa lệnh hay làm gì ạ?');
             }
         });
     },
@@ -110,20 +102,14 @@ var botNames = [
 
     placeOrder = function() {
         if (_.every(state.orderDetail, _.identity)) {
-            PubSub.publish('/fulfilled', {
-                status: 'good',
-                message: `Quý khách muốn ${state.orderDetail.side}
+            speak('good', `Quý khách muốn ${state.orderDetail.side}
                     ${state.orderDetail.amount} mã ${state.orderDetail.symbol}
-                    với giá ${state.orderDetail.price} phải không ạ?`
-            });
+                    với giá ${state.orderDetail.price} phải không ạ?`);
         } else {
             state.weAreAskingFor = missingOrderFields()[0];
             var missingFieldName = orderFieldName(state.weAreAskingFor);
 
-            PubSub.publish('/fulfilled', {
-                status: 'bad',
-                message: `Xin quý khách nêu rõ thêm ${missingFieldName} nữa ạ.`
-            });
+            speak('bad', `Xin quý khách nêu rõ thêm ${missingFieldName} nữa ạ.`);
         }
     },
 
@@ -138,16 +124,16 @@ var botNames = [
                 login(username, password);
 
             } else if (!vtosKeys[0]) {
-                setVtosKey(0, data.message);
-                askForVtosKey(1);
+                if (setVtosKey(0, data.message))
+                    askForVtosKey(1);
 
             } else if (!vtosKeys[1]) {
-                setVtosKey(1, data.message);
-                askForVtosKey(2);
+                if (setVtosKey(1, data.message))
+                    askForVtosKey(2);
 
             } else if (!vtosKeys[2]) {
-                setVtosKey(2, data.message);
-                authenticateVtos();
+                if (setVtosKey(2, data.message))
+                    authenticateVtos();
 
             } else { // logged in and vtos-authenticated successfully
                 PubSub.publish('/human', {
@@ -160,10 +146,7 @@ var botNames = [
     },
 
     askForUsername = function() {
-        PubSub.publish('/fulfilled', {
-            status: 'good',
-            message: 'Để bắt đầu, quý khách có thể vui lòng cho em xin tên đăng nhập được không ạ?'
-        });
+        speak('good', 'Để bắt đầu, quý khách có thể vui lòng cho em xin <strong>tên đăng nhập</strong> được không ạ?');
     },
 
     setUsername = function(input) {
@@ -171,10 +154,7 @@ var botNames = [
     },
 
     askForPassword = function() {
-        PubSub.publish('/fulfilled', {
-            status: 'good',
-            message: 'Cám ơn quý khách. Mật khẩu của quý khách là gì ạ?'
-        });
+        speak('good', 'Cám ơn quý khách. <strong>Mật khẩu</strong> của quý khách là gì ạ?');
     },
 
     setPassword = function(input) {
@@ -182,25 +162,23 @@ var botNames = [
     },
 
     login = function(inputUsername, inputPassword) {
-        PubSub.publish('/fulfilled', {
-            status: 'good',
-            message: 'Cám ơn quý khách ạ. Em sẽ thử đăng nhập vào hệ thống cho quý khách bây giờ ạ.'
-        });
+        speak('good', 'Cám ơn quý khách ạ. Em sẽ thử đăng nhập vào hệ thống cho quý khách bây giờ, vui lòng đợi em chút xíu ạ.');
 
         tradeApiHelper.login(inputUsername, inputPassword)
-            .done(function() {
-                PubSub.publish('/fulfilled', {
-                    status: 'good',
-                    message: 'Quý khách đã đăng nhập thành công!'
-                });
+
+            .then(function() {
+                return $.when(tradeApiHelper.loadCustomer(), tradeApiHelper.loadAccounts());
+            })
+
+            .done(function(customerRes, accountsRes) {
+                accountNo = customerRes[0].accounts[0].accountNumber;
+                pPower = accountsRes[0].accounts[0].purchasePower;
+                speak('good', `Đăng nhập thành công rồi ạ! Chào mừng quý khách <strong>${customerRes[0].customerName}</strong> đến với VNDIRECT. Số tài khoản của quý khách là <strong>${accountNo}</strong>, sức mua là <strong>${addCommasToNumber(pPower)}‎₫</strong>.`);
                 vtosAttemptCount = 0;
                 askForVtosKey(0);
 
             }).fail(function() {
-                PubSub.publish('/fulfilled', {
-                    status: 'bad',
-                    message: 'Hình như tên đăng nhập hoặc mật khẩu của quý khách bị sai rồi ạ. Quý khách có thể cho em xin lại tên đăng nhập được không ạ?'
-                });
+                speak('bad', 'Hình như tên đăng nhập hoặc mật khẩu của quý khách bị sai rồi ạ. Quý khách có thể cho em xin lại tên đăng nhập được không ạ?');
                 username = undefined;
                 password = undefined;
             });
@@ -208,50 +186,37 @@ var botNames = [
 
     askForVtosKey = function(index) {
         if ((index == 0) && (vtosAttemptCount == 0)) {
-            PubSub.publish('/fulfilled', {
-                status: 'good',
-                message: 'Để đảm bảo an toàn trong giao dịch trực tuyến, quý khách cần xác nhận mã thẻ VTOS. Quý khách vui lòng chuẩn bị sẵn thẻ VTOS giúp em ạ. Hệ thống sẽ hỏi quý khách 3 ô trên thẻ VTOS của quý khách.'
-            });
+            speak('good', 'Để đảm bảo an toàn trong giao dịch trực tuyến, quý khách cần xác nhận mã thẻ VTOS. Quý khách vui lòng chuẩn bị sẵn thẻ VTOS giúp em ạ. Hệ thống sẽ hỏi quý khách 3 ô trên thẻ VTOS của quý khách.');
+
             tradeApiHelper.getVtosChallenges().done(function(data) {
                 vtosChallenges = data.challenges;
-                PubSub.publish('/fulfilled', {
-                    status: 'good',
-                    message: `Thẻ của quý khách có mã số là <strong>${data.serial}</strong>.`
-                });
-                PubSub.publish('/fulfilled', {
-                    status: 'good',
-                    message: `Chữ số ở vị trí <strong>${vtosChallenges[0]}</strong> trên thẻ VTOS của quý khách là gì ạ?`
-                });
+                speak('good', `Thẻ của quý khách có số sê-ri là <strong>${data.serial}</strong>.`);
+                speak('good', `Chữ số ở vị trí <strong>${vtosChallenges[0]}</strong> trên thẻ VTOS của quý khách là gì ạ?`);
             });
 
         } else {
-            PubSub.publish('/fulfilled', {
-                status: 'good',
-                message: `Chữ số ở vị trí <strong>${vtosChallenges[index]}</strong> trên thẻ VTOS của quý khách là gì ạ?`
-            });
+           speak('good', `Chữ số ở vị trí <strong>${vtosChallenges[index]}</strong> trên thẻ VTOS của quý khách là gì ạ?`);
         }
     },
 
     setVtosKey = function(index, value) {
-        vtosKeys[index] = value;
+        console.log(vtosKeys);
+        if (value.trim().length != 1) {
+            speak('bad', `Dạ, quý khách chỉ cần viết đúng một ký tự ở ô tương ứng trên thẻ VTOS. Mời quý khách thử lại ạ.`);
+            return false;
+        } else {
+            vtosKeys[index] = value;
+            return true;
+        }
     },
 
     authenticateVtos = function() {
         vtosAttemptCount++;
         tradeApiHelper.postVtosAnswer(vtosKeys).done(function(data) {
-            PubSub.publish('/fulfilled', {
-                status: 'good',
-                message: 'Quý khách đã xác nhận thẻ VTOS thành công!'
-            });
-            PubSub.publish('/fulfilled', {
-                status: 'good',
-                message: 'Hệ thống giao dịch đã sẵn sàn. Bây giờ quý khách cần làm gì ạ?'
-            });
+            speak('good', 'Quý khách đã xác nhận thẻ VTOS thành công!');
+            speak('good', 'Hệ thống giao dịch đã sẵn sàn. Bây giờ quý khách cần làm gì ạ?');
         }).fail(function() {
-            PubSub.publish('/fulfilled', {
-                status: 'bad',
-                message: 'Xác nhận thẻ VTOS không thành công. Mình thử lại nhé ạ.'
-            });
+            speak('bad', 'Xác nhận thẻ VTOS không thành công. Mình thử lại nhé ạ.');
             vtosKeys = [];
             askForVtosKey(0);
         });
@@ -269,3 +234,4 @@ module.exports = {
         listenToHuman();
         listenToParser();
     }
+}
