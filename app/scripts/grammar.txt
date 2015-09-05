@@ -1,0 +1,65 @@
+{
+  function removeSpace(arr) {
+    for (var i = 0; i < arr.length; i++) {
+      if (arr[i] === " ") {
+        arr.splice(i, 1);
+      }
+    }
+  }
+}
+
+S =
+  (SUBJ? VP / NP) EXCLAM?
+
+SUBJ = NP
+
+// verb phrase
+VP = VP:(PP? V PP? NP? PP?) { return {VP: VP}; }
+
+// noun phrase
+NP = NP:(NUMBER? CLASSIFIER? NOUN+ ADJ* / PRP / NUMBER) _ { return {NP: NP}; }
+
+// động từ tình thái
+VTT = VTT:("muon") _
+
+// động từ hành động
+VHD =
+  VHD:("dat mua" / "mua" / "ban" / "huy" / "sua") _ { return VHD; }
+
+V = VTT? V:VHD { return {V: V}; }
+
+// Prepositional phrase
+PP =
+  PP:(P / ("cho" $_ PRP) / "gia" $_ NUMBER) _ {
+  removeSpace(PP);
+  return {PP: PP};
+}
+
+P =
+  P:("nhanh" / "ngay") _ { return {P: P}; }
+
+CLASSIFIER = CLASSIFIER:("con") _ { return {CLASSIFIER: CLASSIFIER}; }
+
+NOUN =
+  NOUN:("ma" / "lenh" / "so" / "bac sy" / "co phieu" / "cp" / <%= stockSymbols %>) _ { return {NOUN: NOUN}; }
+
+ADJ =
+  ADJ:("vua xong") { return {ADJ: ADJ}; }
+
+NUMBER
+    = NUMBER:integer $_ "ngan" _ { NUMBER *= 1000; return {NUMBER: NUMBER} }
+    / NUMBER:integer _ { return {NUMBER: NUMBER}; }
+
+// Pronoun
+PRP =
+  prp:("toi" / "tao" / "anh" / "em" / "chi") _ { return prp; }
+
+EXCLAM =
+  EXCLAM:("nhe"/ "voi") { return {EXCLAM: EXCLAM}; }
+
+_ = [ \t\n\r]*
+__ = [ \t\n\r]+
+
+
+integer "integer"
+    = digits:[0-9]+ { return parseInt(digits.join(""), 10); }
