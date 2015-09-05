@@ -1,5 +1,4 @@
 {
-
   function removeSpace(arr) {
     for (var i = 0; i < arr.length; i++) {
       if (arr[i] === " ") {
@@ -10,18 +9,18 @@
 }
 
 S =
-  S:(SUBJ_NP / SUBJ_VP / SUBJ / YES_NO) { return ["S", S]; }
+  S:(CALLING / SUBJ_NP / SUBJ_VP / SUBJ / YES_NO) _ EXCLAM? { return ["S", S]; }
 
-SUBJ_NP = SUBJ? NP EXCLAM?
-SUBJ_VP = SUBJ? VP EXCLAM?
+SUBJ_NP = SUBJ? NP
+SUBJ_VP = SUBJ? VP
 
 YES_NO = YES_NO:(YES / NO) { return ["YES_NO", YES_NO]; }
 
 YES =
-  ("dung roi" / "dung" / "uh" / "okay" / "ok" / "yup" / "yeah" / "yes") _
+  YES:("dung roi" / "dung" / "uh" / "okay" / "ok" / "yup" / "yeah" / "yes") _ { return ["YES", YES ]; }
 
 NO =
-  ("khong phai" / "khong" / "nham roi")
+  NO:("khong phai" / "khong" / "nham roi") { return ["NO", NO ]; }
 
 SUBJ = SUBJ:NP { return ["SUBJ", SUBJ]; }
 
@@ -31,7 +30,7 @@ VP
 
 // noun phrase
 NP
-  = NP:(NUMBER? CLASSIFIER? (NOUN / PRP)+ ADJ* / NUMBER) _
+  = NP:(NUMBER? CLASSIFIER? (NOUN / PRP) ADJ* / NUMBER) _
   {
     return ["NP", NP];
   }
@@ -47,7 +46,7 @@ V = VTT? V:VHD { return ["V", V]; }
 
 // Prepositional phrase
 PP =
-  PP:(P / "cho" $_ PRP / "gia" $_ NUMBER) _ {
+  PP:(P / ("cho" / "giup") $_ PRP / "gia" $_ PRICE:NUMBER {return ["PRICE", PRICE]; }) _ {
   removeSpace(PP);
   return ["PP", PP];
 }
@@ -58,7 +57,10 @@ P =
 CLASSIFIER = CLASSIFIER:("con") _ { return {CLASSIFIER: CLASSIFIER}; }
 
 NOUN =
-  NOUN:("gia" / "ma" / "lenh" / "so" / "bac sy" / "co phieu" / "cp" / <%= stockSymbols %>) _ { return ["NOUN", NOUN]; }
+  NOUN:(STOCK / "gia" / "ma" / "lenh") _ { return ["NOUN", NOUN]; }
+
+STOCK =
+  ("co phieu" / "ma" / "cp")? _ STOCK:(<%= stockSymbols %>) _ { return ["STOCK", STOCK]; }
 
 ADJ =
   ADJ:("vua xong" / "dep") _ { return ["ADJ", ADJ]; }
@@ -69,10 +71,13 @@ NUMBER
 
 // Pronoun
 PRP =
-  PRP:("toi" / "tao" / "anh" / "em" / "chi" / "minh" / "bo may" / "ba" / "co" / "di" / "chu" / "bac" / "chau" / "may") _ { return ["PRP", PRP]; }
+  PRP:("em yeu" / "toi" / "tao" / "anh" / "em" / "chi" / "minh" / "bo may" / "co" / "di" / "chu" / "bac" / "chau" / "may") _ { return ["PRP", PRP]; }
 
 EXCLAM =
-  EXCLAM:("nhe"/ "voi" / "day") { return ["EXCLAM", EXCLAM]; }
+  EXCLAM:("nhe"/ "voi" / "day" / "di" / "dau") { return ["EXCLAM", EXCLAM]; }
+
+CALLING =
+  CALLING:(PRP $_ ("oi" / "ah" / "a")) _ { return ["CALLING", CALLING]; }
 
 _ = [ \t\n\r]*
 __ = [ \t\n\r]+

@@ -2,78 +2,86 @@ import _ from "underscore";
 import PEG from "pegjs/lib/peg";
 import DISPATCHER from "./pubsub";
 
-function parseTree(tree) {
-  var firstVP = findVerbPhrase(tree);
-  return parseVerbPhrase(firstVP);
-}
-
 
 export var INTENT = {
-    PLACE_ORDER: "PLACE_ORDER"
+    PLACE_ORDER: "PLACE_ORDER",
+    GREETING: "GREETING",
+    UPDATE_INFO: "UPDATE_INFO",
+    CONFIRM: "CONFIRM",
+    DENY: "DENY",
+    GET_ATTENTION: "GET_ATTENTION"
 };
 
 export var ORDER_SIDE = {
     BUYING: "BUYING",
     SELLING: "SELLING"
-}
+};
 
-
-/**
- * Find the first verb phrase in a tree
- */
-function findVerbPhrase(tree) {
-  return tree[0][1]["VP"];
-}
-
-function parseVerbPhrase(vp) {
-  var result = {};
-
-  _.each(vp, function(element, key) {
-    if (_.has(element, "V") && _(["mua", "ban"]).contains(element["V"])) {
-      result.intent = INTENT.PLACE_ORDER;
-      result.side = {
-        "mua": ORDER_SIDE.BUYING,
-        "ban": ORDER_SIDE.SELLING
-      }[element["V"]];
-
-      // Find the amount and symbol
-      var firstNP = _.chain(vp).filter(function(el) { return _.has(el, "NP"); }).pluck("NP").first().value();
-
-      console.log(firstNP)
-
-      _.chain(firstNP).flatten().each(function(node) {
-        if (_.has(node, "NUMBER")) {
-          result.amount = node.NUMBER;
-        }
-
-        if (_.has(node, "NOUN")) {
-          result.symbol = node.NOUN;
-        }
-      });
-
-      // Find the price
-      _.chain(vp)
-      .filter(function(node) { return _.has(node, "PP"); })
-      .pluck("PP")
-      .each(function(node) {
-        if (node[0] === "gia" && _.has(node[1], "NUMBER")) {
-          result.price = node[1].NUMBER;
-        }
-      });
+function parseTree(tree, result) {
+    // Recursively walk down the tree
+    if (result === undefined) {
+        var result = {};
     }
-  });
 
-  return result;
+    _.chain(tree).filter().each((node) => {
+        var nodeType = node[0];
+
+        if (nodeType === "V") {
+            if (_.contains(["mua", "ban"], node[1])) {
+                result.intent = INTENT.PLACE_ORDER;
+                result.side = {
+                    "mua": ORDER_SIDE.BUYING,
+                    "ban": ORDER_SIDE.SELLING
+                }[node[1]];
+            } else if (node[1] === "chao") {
+                result.intent = INTENT.GREETING;
+            }
+        }
+
+        if (nodeType === "STOCK") {
+            result.symbol = node[1];
+        }
+
+        if (nodeType === "PRICE") {
+            result.price = node[1];
+        }
+
+        if (nodeType === "NUMBER") {
+            result.amount = node[1];
+        }
+
+        if (nodeType === "YES") {
+            result.intent = INTENT.CONFIRM;
+        }
+
+        if (nodeType === "NO") {
+            result.intent = INTENT.DENY;
+        }
+
+        if (nodeType === "CALLING") {
+            result.intent = INTENT.GET_ATTENTION;
+        }
+
+        if (_.isArray(node)) {
+            parseTree(node, result);
+        }
+    });
+
+    if (result.intent === undefined) {
+        result.intent = INTENT.UPDATE_INFO;
+    }
+
+    return result;
 }
-
 
 Promise.all([
     $.get("/scripts/grammar.txt"),
-    $.get("http://priceservice.vndirect.com.vn/priceservice/company/snapshot/")
+    // $.get("http://125.212.207.68/priceservice/company/snapshot")
 ]).then((values) => {
     var symbolInfos = values[1];
 
-    var codes = _.pluck(symbolInfos, "code");
+    // var codes = _.pluck(symbolInfos, "code");
+    var codes = ["VND", "ACB"];
     var grammar = _.template(values[0])({ stockSymbols: '"' + codes.join('" / "') + '"' });
 
     // TODO: this line takes a looooooooooooong time to finish!

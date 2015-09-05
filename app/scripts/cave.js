@@ -1,4 +1,5 @@
 import $ from "jquery";
+import _ from "underscore";
 import PubSub from "./pubsub";
 import {TradeApiClient} from "./trade-api-client";
 import {INTENT} from "./parser";
@@ -13,6 +14,7 @@ var botNames = [
         'Courtney Hạnh'],
     username, password, vtosKeys, vtosChallenges, vtosAttemptCount,
     tradeApiHelper, 
+    state = {},
 
     getBotName = function() {
         var index = Math.round(Math.random() * botNames.length);
@@ -27,21 +29,58 @@ var botNames = [
         });
     },
 
+    resetState = function() {
+        state = {
+            currentOperation: undefined,
+            orderDetail: {
+                side: undefined,
+                amount: undefined,
+                symbol: undefined,
+                price: undefined
+            }
+        };
+    },
+
     listenToParser = function() {
         PubSub.subscribe('/processed', function(event) {
-            console.log(INTENT);
+            console.log(state);
             if (event.status === "ok") {
-                console.log("here");
-                if (event.message.intent === INTENT.PLACE_ORDER) {
-                    var side = event.message.side;
-                    var symbol = event.message.symbol;
-                    var price = event.message.price;
-                    var amount = event.message.amount;
-
+                if (event.message.intent === INTENT.CONFIRM) {
                     PubSub.publish('/fulfilled', {
                         status: 'good',
-                        message: `Quý khách muốn ${side} ${amount} mã ${symbol} với giá ${price} phải không ạ?`;
+                        message: "Vâng, em đang thực hiện lệnh của quý khách ngay đây ạ!"
                     });
+                } else if (event.message.intent === INTENT.DENY) {
+                    PubSub.publish('/fulfilled', {
+                        status: 'good',
+                        message: "Vâng, tùy quý khách ạ!"
+                    });
+                    resetState();
+                } else if (event.message.intent === INTENT.GREETING) {
+                    PubSub.publish('/fulfilled', {
+                        status: 'good',
+                        message: "Xin kính chào quý khách!"
+                    });
+                } else if (event.message.intent === INTENT.GET_ATTENTION) {
+                    PubSub.publish('/fulfilled', {
+                        status: 'good',
+                        message: "Vâng, thưa quý khách!"
+                    });
+                } else if (event.message.intent === INTENT.PLACE_ORDER) {
+                    state.currentOperation = event.message.intent;
+
+                    _.extend(state.orderDetail, event.message);
+                    placeOrder();
+                } else if (event.message.intent === INTENT.UPDATE_INFO) {
+                    if (state.currentOperation === INTENT.PLACE_ORDER) {
+                        if (_.contains(["amount", "price"], state.weAreAskingFor)) {
+                            state.orderDetail[state.weAreAskingFor] = event.message.amount;
+                        } else {
+                            state.orderDetail[state.weAreAskingFor] = event.message[state.weAreAskingFor];
+                        }
+
+                        placeOrder();
+                    }
                 }
             } else {
                 PubSub.publish('/fulfilled', {
@@ -50,6 +89,42 @@ var botNames = [
                 });
             }
         });
+    },
+
+    missingOrderFields = function() {
+        return _.chain(state.orderDetail)
+            .pairs()
+            .filter((pair) => pair[1] === undefined)
+            .unzip()
+            .first()
+            .value();
+    },
+
+    orderFieldName = function(field) {
+        return {
+            "price": "giá",
+            "amount": "số lượng",
+            "symbol": "mã chứng khoán"
+        }[field];
+    },
+
+    placeOrder = function() {
+        if (_.every(state.orderDetail, _.identity)) {
+            PubSub.publish('/fulfilled', {
+                status: 'good',
+                message: `Quý khách muốn ${state.orderDetail.side}
+                    ${state.orderDetail.amount} mã ${state.orderDetail.symbol}
+                    với giá ${state.orderDetail.price} phải không ạ?`
+            });
+        } else {
+            state.weAreAskingFor = missingOrderFields()[0];
+            var missingFieldName = orderFieldName(state.weAreAskingFor);
+
+            PubSub.publish('/fulfilled', {
+                status: 'bad',
+                message: `Xin quý khách nêu rõ thêm ${missingFieldName} nữa ạ.`
+            });
+        }
     },
 
     listenToHuman = function() {
@@ -184,6 +259,8 @@ var botNames = [
 
 module.exports = {
     init: function() {
+        resetState();
+
         tradeApiHelper = new TradeApiClient();
         vtosKeys = [];
 
