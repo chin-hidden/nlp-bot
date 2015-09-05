@@ -1,0 +1,21 @@
+{
+  "name": "nlp-bot",
+  "version": "0.0.0",
+  "authors": [
+    "Trung Ngo <ndtrung4419@gmail.com>"
+  ],
+  "moduleType": [
+    "es6"
+  ],
+  "license": "GPLv3",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "pegjs": "~0.9.0"
+  }
+}
