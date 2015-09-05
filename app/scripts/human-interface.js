@@ -12,7 +12,8 @@ import template from 'microtemplates';
 var $textarea, $conversation, $form, userMessageTmpl, botMessageTmpl, botMessagesQueue,
 
 	renderHumanMessage = function(message) {
-		var msgHtml = template(userMessageTmpl, {message: message});
+		var now = new Date();
+		var msgHtml = template(userMessageTmpl, {message: message, time: `${now.getHours()}:${now.getMinutes()}`});
 		$textarea.val('');
 		$conversation.append(msgHtml);
 		scrollToBottom();

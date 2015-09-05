@@ -131,7 +131,7 @@ var botNames = [
 
             tradeApiHelper.getVtosChallenges().done(function(data) {
                 vtosChallenges = data.challenges;
-                speak('good', `Thẻ của quý khách có mã số là <strong>${data.serial}</strong>.`);
+                speak('good', `Thẻ của quý khách có số sê-ri là <strong>${data.serial}</strong>.`);
                 speak('good', `Chữ số ở vị trí <strong>${vtosChallenges[0]}</strong> trên thẻ VTOS của quý khách là gì ạ?`);
             });
 
