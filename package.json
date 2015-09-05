@@ -54,6 +54,7 @@
     "configFile": "app/scripts/config.js",
     "dependencies": {
       "jquery": "github:components/jquery@^2.1.4",
+      "paulmillr/microtemplates": "github:paulmillr/microtemplates@^0.1.0",
       "pegjs": "npm:pegjs@^0.9.0"
     },
     "devDependencies": {

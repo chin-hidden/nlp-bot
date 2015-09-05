@@ -12,13 +12,13 @@ header {
 }
 
 #main {
-	padding: 40px 0 0;
+	padding: 40px 0 110px;
 }
 
 #user-input {
 	background: #555;
 	bottom: 0;
-	padding: 10px;
+	padding: 10px 0;
 	position: fixed;
 	width: 100%;
 
@@ -48,5 +48,21 @@ header {
 		border-radius: 3px;
 		color: #fff;
 		padding: 4px 20px;
+	}
+}
+
+#conversation {
+	max-width: 600px;
+	padding: 20px 0 0;
+	margin: auto;
+
+	blockquote {
+		background: rgba(255, 255, 255, 0.1);
+		border-radius: 3px;
+		padding: 10px;
+
+		&.human {
+			margin: 0 100px 20px 0;
+		}
 	}
 }
