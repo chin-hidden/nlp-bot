@@ -65,16 +65,16 @@ var botNames = [
                 login(username, password);
 
             } else if (!vtosKeys[0]) {
-                setVtosKey(0, data.message);
-                askForVtosKey(1);
+                if (setVtosKey(0, data.message))
+                    askForVtosKey(1);
 
             } else if (!vtosKeys[1]) {
-                setVtosKey(1, data.message);
-                askForVtosKey(2);
+                if (setVtosKey(1, data.message))
+                    askForVtosKey(2);
 
             } else if (!vtosKeys[2]) {
-                setVtosKey(2, data.message);
-                authenticateVtos();
+                if (setVtosKey(2, data.message))
+                    authenticateVtos();
 
             } else { // logged in and vtos-authenticated successfully
                 PubSub.publish('/human', {
@@ -103,7 +103,7 @@ var botNames = [
     },
 
     login = function(inputUsername, inputPassword) {
-        speak('good', 'Cám ơn quý khách ạ. Em sẽ thử đăng nhập vào hệ thống cho quý khách bây giờ ạ.');
+        speak('good', 'Cám ơn quý khách ạ. Em sẽ thử đăng nhập vào hệ thống cho quý khách bây giờ, vui lòng đợi em chút xíu ạ.');
 
         tradeApiHelper.login(inputUsername, inputPassword)
             
@@ -141,7 +141,14 @@ var botNames = [
     },
 
     setVtosKey = function(index, value) {
-        vtosKeys[index] = value;
+        console.log(vtosKeys);
+        if (value.trim().length != 1) {
+            speak('bad', `Dạ, quý khách chỉ cần viết đúng một ký tự ở ô tương ứng trên thẻ VTOS. Mời quý khách thử lại ạ.`);
+            return false;
+        } else {
+            vtosKeys[index] = value;
+            return true;
+        }
     },
 
     authenticateVtos = function() {
