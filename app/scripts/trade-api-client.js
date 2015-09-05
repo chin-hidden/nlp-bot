@@ -1,9 +1,8 @@
 import $ from "jquery";
 import DISPATCHER from "./pubsub";
 
-TRADE_URL = 'https://trade-api.vndirect.com.vn';
-AUTH_URL = 'https://auth-api.vndirect.com.vn';
-
+var TRADE_URL = 'https://trade-api.vndirect.com.vn';
+var AUTH_URL = 'https://auth-api.vndirect.com.vn';
 
 export class TradeApiClient {
   login(username, password) {
