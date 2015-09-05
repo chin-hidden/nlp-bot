@@ -10,7 +10,7 @@ var botNames = [
         'Jennifer Huệ', 
         'Tiffany Hồng Thuý',
         'Courtney Hạnh'],
-    username, password, vtosKeys,
+    username, password, vtosKeys, vtosChallenges, vtosAttemptCount,
     tradeApiHelper, 
 
     getBotName = function() {
@@ -22,7 +22,7 @@ var botNames = [
     welcome = function() {
         PubSub.publish('/fulfilled', {
             status: 'good',
-            message: 'Chào mừng quý khách đến với dịch vụ giao dịch qua chat của VNDIRECT! Em tên là ' + getBotName() + '. Em rất hân hạnh được phục vụ quý khách ngày hôm nay.'
+            message: `Chào mừng quý khách đến với dịch vụ giao dịch qua chat của VNDIRECT! Em tên là ${getBotName()}. Em rất hân hạnh được phục vụ quý khách ngày hôm nay.`
         });
     },
 
@@ -38,12 +38,15 @@ var botNames = [
 
             } else if (!vtosKeys[0]) {
                 setVtosKey(0, data.message);
+                askForVtosKey(1);
 
             } else if (!vtosKeys[1]) {
                 setVtosKey(1, data.message);
+                askForVtosKey(2);
 
             } else if (!vtosKeys[2]) {
                 setVtosKey(2, data.message);
+                authenticateVtos();
 
             } else { // logged in and vtos-authenticated successfully
                 PubSub.publish('/human', {
@@ -89,6 +92,7 @@ var botNames = [
                     status: 'good',
                     message: 'Quý khách đã đăng nhập thành công!'
                 });
+                vtosAttemptCount = 0;
                 askForVtosKey(0);
 
             }).fail(function() {
@@ -102,19 +106,53 @@ var botNames = [
     },
 
     askForVtosKey = function(index) {
-        if (index == 0) {
+        if ((index == 0) && (vtosAttemptCount == 0)) {
             PubSub.publish('/fulfilled', {
                 status: 'good',
                 message: 'Để đảm bảo an toàn trong giao dịch trực tuyến, quý khách cần xác nhận mã thẻ VTOS. Quý khách vui lòng chuẩn bị sẵn thẻ VTOS giúp em ạ. Hệ thống sẽ hỏi quý khách 3 ô trên thẻ VTOS của quý khách.'
             });
+            tradeApiHelper.getVtosChallenges().done(function(data) {
+                vtosChallenges = data.challenges;
+                PubSub.publish('/fulfilled', {
+                    status: 'good',
+                    message: `Thẻ của quý khách có mã số là <strong>${data.serial}</strong>.`
+                });
+                PubSub.publish('/fulfilled', {
+                    status: 'good',
+                    message: `Chữ số ở vị trí <strong>${vtosChallenges[0]}</strong> trên thẻ VTOS của quý khách là gì ạ?`
+                });
+            });
+
+        } else {
             PubSub.publish('/fulfilled', {
                 status: 'good',
-                message: 'Thẻ của quý khách có mã số là ...'
+                message: `Chữ số ở vị trí <strong>${vtosChallenges[index]}</strong> trên thẻ VTOS của quý khách là gì ạ?`
             });
         }
-        PubSub.publish('/fulfilled', {
-            status: 'good',
-            message: 'Chữ số ở vị trí ... trên thẻ VTOS của quý khách là gì ạ?'
+    },
+
+    setVtosKey = function(index, value) {
+        vtosKeys[index] = value;
+    },
+
+    authenticateVtos = function() {
+        vtosAttemptCount++;
+        tradeApiHelper.postVtosAnswer(vtosKeys).done(function(data) {
+            PubSub.publish('/fulfilled', {
+                status: 'good',
+                message: 'Quý khách đã xác nhận thẻ VTOS thành công!'
+            });
+            PubSub.publish('/fulfilled', {
+                status: 'good',
+                message: 'Hệ thống giao dịch đã sẵn sàn. Bây giờ quý khách cần làm gì ạ?'
+            });
+        }).fail(function() {
+            PubSub.publish('/fulfilled', {
+                status: 'bad',
+                message: 'Xác nhận thẻ VTOS không thành công. Mình thử lại nhé ạ.'
+            });
+            vtosKeys = [];
+            askForVtosKey(0);
         });
     };
 
