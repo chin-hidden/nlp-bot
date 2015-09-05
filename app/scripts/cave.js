@@ -12,11 +12,15 @@ var botNames = [
         'Tiffany Hồng Thuý',
         'Courtney Hạnh'],
     username, password, vtosKeys, vtosChallenges, vtosAttemptCount, botIndex,
-    tradeApiHelper, 
+    tradeApiHelper, accountNo, pPower,
 
     getBotName = function() {
         botIndex = Math.floor(Math.random() * botNames.length);
         return botNames[botIndex];
+    },
+
+    addCommasToNumber = function(number) {
+        return parseInt(number).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     },
 
     speak = function(status, message) {
@@ -102,8 +106,15 @@ var botNames = [
         speak('good', 'Cám ơn quý khách ạ. Em sẽ thử đăng nhập vào hệ thống cho quý khách bây giờ ạ.');
 
         tradeApiHelper.login(inputUsername, inputPassword)
-            .done(function() {
-               speak('good', 'Đăng nhập thành công rồi ạ!');
+            
+            .then(function() {
+                return $.when(tradeApiHelper.loadCustomer(), tradeApiHelper.loadAccounts());
+            })
+
+            .done(function(customerRes, accountsRes) {
+                accountNo = customerRes[0].accounts[0].accountNumber;
+                pPower = accountsRes[0].accounts[0].purchasePower;
+                speak('good', `Đăng nhập thành công rồi ạ! Chào mừng quý khách <strong>${customerRes[0].customerName}</strong> đến với VNDIRECT. Số tài khoản của quý khách là <strong>${accountNo}</strong>, sức mua là <strong>${addCommasToNumber(pPower)}‎₫</strong>.`);
                 vtosAttemptCount = 0;
                 askForVtosKey(0);
 

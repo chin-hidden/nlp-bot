@@ -53,5 +53,19 @@ export class TradeApiClient {
         }).then(function(data) {
             console.log(data);
         });
-    }
+    };
+
+    loadCustomer() {
+        return $.ajax({
+            url: TRADE_URL + '/customer',
+            method: 'GET'
+        });
+    };
+
+    loadAccounts() {
+        return $.ajax({
+            url: TRADE_URL + '/accounts',
+            method: 'GET'
+        });
+    };
 }
