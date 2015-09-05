@@ -11,6 +11,7 @@ var botNames = [
         'Tiffany Hồng Thuý',
         'Courtney Hạnh'],
     username, password, vtosKeys,
+    tradeApiHelper, 
 
     getBotName = function() {
         var index = Math.round(Math.random() * botNames.length);
@@ -27,19 +28,23 @@ var botNames = [
 
     listenToHuman = function() {
         PubSub.subscribe('/human-raw', function(data) {
-            console.log(data, username, password);
             if (!username) {
                 setUsername(data.message);
                 askForPassword();
+
             } else if (!password) {
                 setPassword(data.message);
                 login(username, password);
+
             } else if (!vtosKeys[0]) {
                 setVtosKey(0, data.message);
+
             } else if (!vtosKeys[1]) {
                 setVtosKey(1, data.message);
+
             } else if (!vtosKeys[2]) {
                 setVtosKey(2, data.message);
+
             } else { // logged in and vtos-authenticated successfully
                 PubSub.publish('/human', {
                     loggedIn: true,
@@ -72,20 +77,50 @@ var botNames = [
         password = input;
     },
 
-    login = function(username, password) {
+    login = function(inputUsername, inputPassword) {
         PubSub.publish('/fulfilled', {
             status: 'good',
             message: 'Cám ơn quý khách ạ. Em sẽ thử đăng nhập vào hệ thống cho quý khách bây giờ ạ.'
         });
+
+        tradeApiHelper.login(inputUsername, inputPassword)
+            .done(function() {
+                PubSub.publish('/fulfilled', {
+                    status: 'good',
+                    message: 'Quý khách đã đăng nhập thành công!'
+                });
+                askForVtosKey(0);
+
+            }).fail(function() {
+                PubSub.publish('/fulfilled', {
+                    status: 'bad',
+                    message: 'Hình như tên đăng nhập hoặc mật khẩu của quý khách bị sai rồi ạ. Quý khách có thể cho em xin lại tên đăng nhập được không ạ?'
+                });
+                username = undefined;
+                password = undefined;
+            });
     },
 
-    askToVtos = function() {
-        
+    askForVtosKey = function(index) {
+        if (index == 0) {
+            PubSub.publish('/fulfilled', {
+                status: 'good',
+                message: 'Để đảm bảo an toàn trong giao dịch trực tuyến, quý khách cần xác nhận mã thẻ VTOS. Quý khách vui lòng chuẩn bị sẵn thẻ VTOS giúp em ạ. Hệ thống sẽ hỏi quý khách 3 ô trên thẻ VTOS của quý khách.'
+            });
+            PubSub.publish('/fulfilled', {
+                status: 'good',
+                message: 'Thẻ của quý khách có mã số là ...'
+            });
+        }
+        PubSub.publish('/fulfilled', {
+            status: 'good',
+            message: 'Chữ số ở vị trí ... trên thẻ VTOS của quý khách là gì ạ?'
+        });
     };
 
 module.exports = {
     init: function() {
-        var thisClient = new TradeApiClient();
+        tradeApiHelper = new TradeApiClient();
         vtosKeys = [];
 
         welcome();
