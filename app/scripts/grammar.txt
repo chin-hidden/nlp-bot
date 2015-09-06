@@ -77,13 +77,13 @@ UNK_PRP =
   UNK_PRP:("lam gi" / "cai gi" / "nhung gi" / "gi") _ { return ["UNK_PRP", UNK_PRP]; }
 
 EXCLAM =
-  EXCLAM:("the nay" / "the" / "nhe"/ "voi" / "day" / "di" / "dau" / "cai" / "nao" / "ah" / "a") { return ["EXCLAM", EXCLAM]; }
+  EXCLAM:("the nay" / "the" / "nhe"/ "voi" / "day" / "di" / "dau" / "cai" / "nao" / "thoi" / "ah" / "a" / "y") { return ["EXCLAM", EXCLAM]; }
 
 SEEK_REAFFIRM =
   SEEK_REAFFIRM:("co that khong" / "co that the khong" / "that the khong" / "that khong" / "that the ah" / "that the a" / "the ah" / "the a") { return ["SEEK_REAFFIRM", SEEK_REAFFIRM] }
 
 // hô từ
-HO_TU = HO_TU:("the" / "vay" / "uh thi" / "u thi") _ { return ["HO_TU", HO_TU]; }
+HO_TU = HO_TU:("uh the" / "u the" / "uh thi" / "u thi" / "the" / "vay") _ { return ["HO_TU", HO_TU]; }
 
 CALLING =
   CALLING:(PRP $_ ("oi" / "ah" / "a")) _ { return ["CALLING", CALLING]; }
