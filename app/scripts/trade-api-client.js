@@ -51,7 +51,9 @@ export class TradeApiClient {
             })
 
         }).then(function(data) {
-            console.log(data);
+            $.ajaxSetup({
+                headers: {'X-AUTH-TOKEN': data.token}
+            });
         });
     };
 
@@ -67,5 +69,13 @@ export class TradeApiClient {
             url: TRADE_URL + '/accounts',
             method: 'GET'
         });
+    };
+
+    placeOrder(accountNo, order) {
+        return $.ajax({
+            url: `${TRADE_URL}/accounts/${accountNo}/orders/new_order_requests`,
+            method: 'POST',
+            data: JSON.stringify(order)
+        });      
     };
 }
