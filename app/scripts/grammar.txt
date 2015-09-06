@@ -71,10 +71,10 @@ NUMBER
 
 // Pronoun
 PRP =
-  PRP:("em yeu" / "toi" / "tao" / "anh" / "em" / "chi" / "minh" / "bo may" / "co" / "di" / "chu" / "bac" / "chau" / "may") _ { return ["PRP", PRP]; }
+  PRP:("mi" / "em yeu" / "toi" / "tao" / "anh" / "em" / "chi" / "minh" / "bo may" / "co" / "di" / "chu" / "bac" / "chau" / "may") _ { return ["PRP", PRP]; }
 
 EXCLAM =
-  EXCLAM:("nhe"/ "voi" / "day" / "di" / "dau") { return ["EXCLAM", EXCLAM]; }
+  EXCLAM:("nhe"/ "voi" / "day" / "di" / "dau" / "cai") { return ["EXCLAM", EXCLAM]; }
 
 CALLING =
   CALLING:(PRP $_ ("oi" / "ah" / "a")) _ { return ["CALLING", CALLING]; }
