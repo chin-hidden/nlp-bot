@@ -102,7 +102,7 @@ var botNames = [
     },
 
     placeOrder = function() {
-        if (_.every(state.orderDetail, _.identity)) {
+        if (_.every(state.orderDetail)) {
             speak('good', `Quý khách muốn ${state.orderDetail.side}
                     ${state.orderDetail.amount} mã ${state.orderDetail.symbol}
                     với giá ${state.orderDetail.price} phải không ạ?`);
