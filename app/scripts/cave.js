@@ -2,10 +2,11 @@ import $ from "jquery";
 import _ from "underscore";
 import PubSub from "./pubsub";
 import {TradeApiClient} from "./trade-api-client";
-import {INTENT} from "./parser";
+import {INTENT, ORDER_SIDE} from "./parser";
 import Authenticator from "./cave-authenticator";
 import Banter from "./cave-banter";
 import TradeApiErrors from "./trade-api-errors";
+import {addCommasToNumber} from "./util";
 
 var botNames = [
         'Hayley Hồ Huyền',
@@ -67,18 +68,19 @@ var botNames = [
                 } else if (event.message.intent === INTENT.DENY) {
                     speak('good', "Vâng, tùy quý khách ạ!");
                     resetState();
-
                 } else if (event.message.intent === INTENT.GREETING) {
                     speak('good', "Dạ, em xin kính chào quý khách! Em có thể giúp gì cho quý khách ạ?");
-
-                } else if (event.message.intent === INTENT.GET_ATTENTION) {
+                } else if (event.message.intent === INTENT.ASK_FOR_HELP) {
+                    speak('good', "Dạ, hiện tại em mới chỉ biết đặt lệnh thôi ạ.");
+                } else if (event.message.intent === INTENT.GET_ATTENTION ||
+                           event.message.intent === INTENT.SEEK_REAFFIRM) {
                     speak('good', "Vâng, thưa quý khách!");
-
                 } else if (event.message.intent === INTENT.PLACE_ORDER) {
                     convoState.currentOperation = event.message.intent;
                     _.extend(convoState.orderDetail, event.message);
                     progressPlaceOrderOp(event);
-
+                } else if (event.message.intent === INTENT.LAUGHING) {
+                    speak('good', "Hohohohoho!");
                 } else if (event.message.intent === INTENT.UPDATE_INFO) {
                     if (convoState.currentOperation === INTENT.PLACE_ORDER) {
                         if (_.contains(["amount", "price"], convoState.weAreAskingFor)) {
@@ -86,12 +88,19 @@ var botNames = [
                         } else {
                             convoState.orderDetail[convoState.weAreAskingFor] = event.message[convoState.weAreAskingFor];
                         }
+
+                        if (convoState.weAreAskingFor === "price" && event.message.amount < 1000) {
+                            convoState.orderDetail[convoState.weAreAskingFor] *= 1000;
+                        }
+
                         progressPlaceOrderOp(event);
                     }
+                } else if (event.message.intent === INTENT.VIEW_ORDER_LIST) {
+
                 }
 
             } else { // parser fails to understand wtf user wanted
-                speak('bad', 'Xin lỗi, em chưa hiểu ý quý khách. Quý khách vui lòng trả lời lại câu hỏi của em ạ.');
+                speak('bad', 'Xin lỗi, em chưa hiểu ý quý khách. Quý khách vui lòng nói đơn giản hơn được không ạ?');
             }
         });
     },
@@ -123,15 +132,16 @@ var botNames = [
                     convoState.confirmed = true;
                     return true;
                 } else {
-                    speak('good', `Quý khách muốn ${convoState.orderDetail.side}
-                        ${convoState.orderDetail.amount} mã ${convoState.orderDetail.symbol}
-                        với giá ${convoState.orderDetail.price} phải không ạ?`);
+                    var side = convoState.orderDetail.side === ORDER_SIDE.BUYING ? "mua" : "bán";
+
+                    speak('good', `Quý khách muốn <strong>${side}</strong>
+                        khối lượng <strong>${convoState.orderDetail.amount}</strong> cổ phiếu mã <strong>${convoState.orderDetail.symbol.toUpperCase()}</strong>
+                        với giá <strong>${addCommasToNumber(convoState.orderDetail.price)}‎₫</strong> phải không ạ?`);
                     return false;
                 }
             } else {
                 return true; // good to go!
             }
-
         } else {
             convoState.weAreAskingFor = missingOrderFields()[0];
             var missingFieldName = orderFieldName(convoState.weAreAskingFor);
@@ -162,7 +172,7 @@ var botNames = [
 
                 // let's authenticate them
                 Authenticator.authenticate(data);
-            }            
+            }
         });
     },
 
