@@ -14,7 +14,7 @@ var botNames = [
         'Courtney Hạnh'],
     username, password, vtosKeys, vtosChallenges, vtosAttemptCount, botIndex,
     tradeApiHelper, accountNo, pPower,
-    state = {},
+    convoState = {},
 
     getBotName = function() {
         botIndex = Math.floor(Math.random() * botNames.length);
@@ -34,14 +34,15 @@ var botNames = [
     },
 
     resetState = function() {
-        state = {
+        convoState = {
             currentOperation: undefined,
             orderDetail: {
                 side: undefined,
                 amount: undefined,
                 symbol: undefined,
-                price: undefined
-            }
+                price: undefined,
+            },
+            confirmed: undefined
         };
     },
 
@@ -53,38 +54,45 @@ var botNames = [
         PubSub.subscribe('/processed', function(event) {
             if (event.status === "ok") {
                 if (event.message.intent === INTENT.CONFIRM) {
-                    speak('good', "Vâng, em đang thực hiện lệnh của quý khách ngay đây ạ!");
+                    if (progressPlaceOrderOp(event)) {
+                        speak('good', "Cảm ơn quý khách. Em sẽ thực hiện yêu cầu của quý khách ngay bây giờ!");
+                        askForUsername();
+                    }
+
                 } else if (event.message.intent === INTENT.DENY) {
                     speak('good', "Vâng, tùy quý khách ạ!");
                     resetState();
+
                 } else if (event.message.intent === INTENT.GREETING) {
-                    speak('good', "Xin kính chào quý khách!");
+                    speak('good', "Dạ, em xin kính chào quý khách!");
+
                 } else if (event.message.intent === INTENT.GET_ATTENTION) {
                     speak('good', "Vâng, thưa quý khách!");
+
                 } else if (event.message.intent === INTENT.PLACE_ORDER) {
-                    state.currentOperation = event.message.intent;
+                    convoState.currentOperation = event.message.intent;
+                    _.extend(convoState.orderDetail, event.message);
+                    progressPlaceOrderOp(event);
 
-                    _.extend(state.orderDetail, event.message);
-                    placeOrder();
                 } else if (event.message.intent === INTENT.UPDATE_INFO) {
-                    if (state.currentOperation === INTENT.PLACE_ORDER) {
-                        if (_.contains(["amount", "price"], state.weAreAskingFor)) {
-                            state.orderDetail[state.weAreAskingFor] = event.message.amount;
+                    if (convoState.currentOperation === INTENT.PLACE_ORDER) {
+                        if (_.contains(["amount", "price"], convoState.weAreAskingFor)) {
+                            convoState.orderDetail[convoState.weAreAskingFor] = event.message.amount;
                         } else {
-                            state.orderDetail[state.weAreAskingFor] = event.message[state.weAreAskingFor];
+                            convoState.orderDetail[convoState.weAreAskingFor] = event.message[convoState.weAreAskingFor];
                         }
-
-                        placeOrder();
+                        progressPlaceOrderOp(event);
                     }
                 }
-            } else {
-                speak('bad', 'Xin lỗi, em không hiểu. Quý khách muốn đặt lệnh, sửa lệnh, xóa lệnh hay làm gì ạ?');
+
+            } else { // parser fails to understand wtf user wanted
+                speak('bad', 'Xin lỗi, em chưa hiểu ý quý khách. Quý khách vui lòng trả lời lại câu hỏi của em ạ.');
             }
         });
     },
 
     missingOrderFields = function() {
-        return _.chain(state.orderDetail)
+        return _.chain(convoState.orderDetail)
             .pairs()
             .filter((pair) => pair[1] === undefined)
             .unzip()
@@ -100,48 +108,68 @@ var botNames = [
         }[field];
     },
 
-    placeOrder = function() {
-        if (_.every(state.orderDetail, _.identity)) {
-            speak('good', `Quý khách muốn ${state.orderDetail.side}
-                    ${state.orderDetail.amount} mã ${state.orderDetail.symbol}
-                    với giá ${state.orderDetail.price} phải không ạ?`);
-        } else {
-            state.weAreAskingFor = missingOrderFields()[0];
-            var missingFieldName = orderFieldName(state.weAreAskingFor);
+    // return true when ready to go
+    progressPlaceOrderOp = function(event) {
+        if (convoState.currentOperation === INTENT.PLACE_ORDER) {
+            if (_.every(convoState.orderDetail)) {
+                if (!convoState.confirmed) {
+                    if (event.message.intent === INTENT.CONFIRM) {
+                        convoState.confirmed = true;
+                        return true;
+                    } else {
+                        speak('good', `Quý khách muốn ${convoState.orderDetail.side}
+                            ${convoState.orderDetail.amount} mã ${convoState.orderDetail.symbol}
+                            với giá ${convoState.orderDetail.price} phải không ạ?`);
+                        return false;
+                    }
+                } else {
+                    return true; // good to go!
+                }
 
-            speak('bad', `Xin quý khách nêu rõ thêm ${missingFieldName} nữa ạ.`);
+            } else {
+                convoState.weAreAskingFor = missingOrderFields()[0];
+                var missingFieldName = orderFieldName(convoState.weAreAskingFor);
+                speak('bad', `Xin quý khách nêu rõ thêm ${missingFieldName} nữa ạ.`);
+                return false;
+            }
         }
     },
 
     listenToHuman = function() {
         PubSub.subscribe('/human-raw', function(data) {
-            if (!username) {
-                setUsername(data.message);
-                askForPassword();
 
-            } else if (!password) {
-                setPassword(data.message);
-                login(username, password);
-
-            } else if (!vtosKeys[0]) {
-                if (setVtosKey(0, data.message))
-                    askForVtosKey(1);
-
-            } else if (!vtosKeys[1]) {
-                if (setVtosKey(1, data.message))
-                    askForVtosKey(2);
-
-            } else if (!vtosKeys[2]) {
-                if (setVtosKey(2, data.message))
-                    authenticateVtos();
-
-            } else { // logged in and vtos-authenticated successfully
+            console.log('convoState', convoState);
+            if (!convoState.currentOperation || !convoState.confirmed) {
                 PubSub.publish('/human', {
-                    loggedIn: true,
-                    vtosed: true,
+                    loggedIn: false,
+                    vtosed: false,
                     message: data.message
                 });
-            }
+
+            } else { // we know what user wants, let's authenticate them
+                if (!username) {
+                    setUsername(data.message);
+                    askForPassword();
+
+                } else if (!password) {
+                    setPassword(data.message);
+                    login(username, password);
+
+                } else if (!vtosKeys[0]) {
+                    if (setVtosKey(0, data.message))
+                        askForVtosKey(1);
+
+                } else if (!vtosKeys[1]) {
+                    if (setVtosKey(1, data.message))
+                        askForVtosKey(2);
+
+                } else if (!vtosKeys[2]) {
+                    if (setVtosKey(2, data.message))
+                        authenticateVtos();
+
+                } else { // logged in and vtos-authenticated successfully
+                }
+            }            
         });
     },
 
@@ -230,7 +258,6 @@ module.exports = {
         vtosKeys = [];
 
         welcome();
-        askForUsername();
         listenToHuman();
         listenToParser();
     }
