@@ -78,4 +78,10 @@ export class TradeApiClient {
             data: JSON.stringify(order)
         });      
     };
+
+    loadOrderbook(accountNo) {
+        return $.ajax({
+            url: `${TRADE_URL}/accounts/${accountNo}/orders`
+        });
+    };
 }

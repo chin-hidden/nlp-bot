@@ -39,8 +39,8 @@ var username, password, vtosKeys, vtosChallenges, vtosAttemptCount, tradeApiHelp
             })
 
             .done(function(customerRes, accountsRes) {
-                accountNo = customerRes[0].accounts[0].accountNumber;
-                pPower = accountsRes[0].accounts[0].purchasePower;
+                accountNo = customerRes[0].accounts[customerRes[0].accounts.length-1].accountNumber;
+                pPower = accountsRes[0].accounts[accountsRes[0].accounts.length-1].purchasePower;
                 speak('good', `Đăng nhập thành công rồi ạ! Chào mừng quý khách <strong>${customerRes[0].customerName}</strong> đến với VNDIRECT. Số tài khoản của quý khách là <strong>${accountNo}</strong>, sức mua là <strong>${Util.addCommasToNumber(pPower)}‎₫</strong>.`);
                 vtosAttemptCount = 0;
                 askForVtosKey(0);

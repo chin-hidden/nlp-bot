@@ -113,8 +113,8 @@ Promise.all([
     var grammarTemplate = values[0];
     var symbolInfos = values[1];
 
-    // var codes = _.map(_.pluck(symbolInfos, "code"), (str) => str.toLowerCase());
-    var codes = _.map(["VND", "ACB"], (str) => str.toLowerCase());
+    var codes = _.map(_.pluck(symbolInfos, "code"), (str) => str.toLowerCase());
+    // var codes = _.map(["VND", "ACB"], (str) => str.toLowerCase());
     var grammar = _.template(grammarTemplate)({ stockSymbols: '"' + codes.join('" / "') + '"' });
 
     // TODO: this line takes a looooooooooooong time to finish!

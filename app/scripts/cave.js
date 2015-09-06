@@ -7,6 +7,7 @@ import Authenticator from "./cave-authenticator";
 import Banter from "./cave-banter";
 import TradeApiErrors from "./trade-api-errors";
 import {addCommasToNumber} from "./util";
+import Util from "./util";
 
 var botNames = [
         'Hayley Hồ Huyền',
@@ -96,7 +97,9 @@ var botNames = [
                         progressPlaceOrderOp(event);
                     }
                 } else if (event.message.intent === INTENT.VIEW_ORDER_LIST) {
-
+                    convoState.currentOperation = event.message.intent;
+                    convoState.confirmed = true;
+                    Authenticator.authenticate();
                 }
 
             } else { // parser fails to understand wtf user wanted
@@ -163,8 +166,6 @@ var botNames = [
             // not sure what human is talking about.. let's ask parser
             if (!convoState.currentOperation || !convoState.confirmed) {
                 PubSub.publish('/human', {
-                    loggedIn: false,
-                    vtosed: false,
                     message: data.message
                 });
 
@@ -181,6 +182,8 @@ var botNames = [
             accountNo = data.accountNo;
             if (convoState.currentOperation === INTENT.PLACE_ORDER) {
                 placeOrder();
+            } else if (convoState.currentOperation === INTENT.VIEW_ORDER_LIST) {
+                loadOrderbook();
             }
         });
     },
@@ -188,15 +191,34 @@ var botNames = [
     placeOrder = function() {
         speak('good', 'Em đang thực hiện đặt lệnh vào hệ thống, quý khách chờ chút xíu ạ.');
         tradeApiHelper.placeOrder(accountNo, {
-            side: (convoState.orderDetail.side === INTENT.BUYING) ? 'NB' : 'NS',
-            symbol: convoState.orderDetail.symbol,
+            side: (convoState.orderDetail.side === 'BUYING') ? 'NB' : 'NS',
+            symbol: convoState.orderDetail.symbol.toUpperCase(),
             price: convoState.orderDetail.price,
-            quantity: convoState.orderDetail.amount.toString(),
+            quantity: convoState.orderDetail.amount,
             orderType: 'LO'
 
         }).done(function(data) {
-            console.log(data);
             speak('good', 'Lệnh đặt thành công rồi ạ!');
+            loadOrderbook();
+            resetState();
+
+        }).fail(function(jqXHR) {
+            speak('bad', 'Có lỗi rồi ạ.');
+            speak('bad', TradeApiErrors.getMessage(jqXHR));
+            resetState();
+        });
+    },
+
+    loadOrderbook = function() {
+        speak('good', 'Em đang kiểm tra các lệnh đặt trong ngày, quý khách chờ chút xíu ạ.');
+        tradeApiHelper.loadOrderbook(accountNo).done(function(data) {
+            data.orders.forEach(function(order) {
+                var responseStr = `Quý khách có một lệnh ${order.side == 'NB' ? 'bán' : 'mua'} ${order.quantity} mã ${order.symbol} giá <em>${Util.addCommasToNumber(order.price)}‎₫, trạng thái ${order.status}</em>.`
+                speak('good', responseStr);
+            });
+            if (data.orders.length == 0) {
+                speak('good', 'Chưa có lệnh nào trong ngày hôm nay ạ.'); 
+            }
             resetState();
 
         }).fail(function(jqXHR) {
