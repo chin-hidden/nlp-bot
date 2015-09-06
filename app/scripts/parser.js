@@ -105,13 +105,14 @@ function cleanVietnamese(str) {
 
 Promise.all([
     $.get("/scripts/grammar.txt"),
-    // $.get("http://125.212.207.68/priceservice/company/snapshot")
+    $.get("http://125.212.207.68/priceservice/company/snapshot/")
 ]).then((values) => {
+    var grammarTemplate = values[0];
     var symbolInfos = values[1];
 
-    // var codes = _.pluck(symbolInfos, "code");
+    // var codes = _.map(_.pluck(symbolInfos, "code"), (str) => str.toLowerCase());
     var codes = _.map(["VND", "ACB"], (str) => str.toLowerCase());
-    var grammar = _.template(values[0])({ stockSymbols: '"' + codes.join('" / "') + '"' });
+    var grammar = _.template(grammarTemplate)({ stockSymbols: '"' + codes.join('" / "') + '"' });
 
     // TODO: this line takes a looooooooooooong time to finish!
     var parser = PEG.buildParser(grammar);
