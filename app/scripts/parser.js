@@ -25,6 +25,7 @@ function parseTree(tree, result) {
 
     _.chain(tree).filter().each((node) => {
         var nodeType = node[0];
+        var isTerminal = false;
 
         if (nodeType === "V") {
             if (node[1] === "dat lenh") {
@@ -40,33 +41,29 @@ function parseTree(tree, result) {
             } else if (node[1] === "chao") {
                 result.intent = INTENT.GREETING;
             }
-        }
-
-        if (nodeType === "STOCK") {
+        } else if (nodeType === "STOCK") {
             result.symbol = node[1];
-        }
-
-        if (nodeType === "PRICE") {
-            result.price = node[1];
-        }
-
-        if (nodeType === "NUMBER") {
+        } else if (nodeType === "PRICE") {
+            result.price = node[1][1];
+            if (result.price < 1000) {
+                result.price *= 1000;
+            }
+            isTerminal = true;
+        } else if (nodeType === "NUMBER") {
             result.amount = node[1];
-        }
-
-        if (nodeType === "YES") {
+            isTerminal = true;
+        } else if (nodeType === "YES") {
             result.intent = INTENT.CONFIRM;
-        }
-
-        if (nodeType === "NO") {
+            isTerminal = true;
+        } else if (nodeType === "NO") {
             result.intent = INTENT.DENY;
-        }
-
-        if (nodeType === "CALLING") {
+            isTerminal = true;
+        } else if (nodeType === "CALLING") {
             result.intent = INTENT.GET_ATTENTION;
+            isTerminal = true;
         }
 
-        if (_.isArray(node)) {
+        if (!isTerminal && _.isArray(node)) {
             parseTree(node, result);
         }
     });
