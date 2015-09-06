@@ -25,8 +25,13 @@ function parseTree(tree, result) {
 
     _.chain(tree).filter().each((node) => {
         var nodeType = node[0];
+        var isTerminal = false;
 
         if (nodeType === "V") {
+            if (node[1] === "dat lenh") {
+                result.intent = INTENT.PLACE_ORDER;
+            }
+
             if (_.contains(["mua", "ban"], node[1])) {
                 result.intent = INTENT.PLACE_ORDER;
                 result.side = {
@@ -36,33 +41,29 @@ function parseTree(tree, result) {
             } else if (node[1] === "chao") {
                 result.intent = INTENT.GREETING;
             }
-        }
-
-        if (nodeType === "STOCK") {
+        } else if (nodeType === "STOCK") {
             result.symbol = node[1];
-        }
-
-        if (nodeType === "PRICE") {
-            result.price = node[1];
-        }
-
-        if (nodeType === "NUMBER") {
+        } else if (nodeType === "PRICE") {
+            result.price = node[1][1];
+            if (result.price < 1000) {
+                result.price *= 1000;
+            }
+            isTerminal = true;
+        } else if (nodeType === "NUMBER") {
             result.amount = node[1];
-        }
-
-        if (nodeType === "YES") {
+            isTerminal = true;
+        } else if (nodeType === "YES") {
             result.intent = INTENT.CONFIRM;
-        }
-
-        if (nodeType === "NO") {
+            isTerminal = true;
+        } else if (nodeType === "NO") {
             result.intent = INTENT.DENY;
-        }
-
-        if (nodeType === "CALLING") {
+            isTerminal = true;
+        } else if (nodeType === "CALLING") {
             result.intent = INTENT.GET_ATTENTION;
+            isTerminal = true;
         }
 
-        if (_.isArray(node)) {
+        if (!isTerminal && _.isArray(node)) {
             parseTree(node, result);
         }
     });
@@ -74,6 +75,22 @@ function parseTree(tree, result) {
     return result;
 }
 
+
+function cleanVietnamese(str) {
+    // Stolen from here: canthoit.info/demo-locdau-js.html
+    // Without license or permission haha >:))
+
+    str = str.toLowerCase();
+    str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+    str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+    str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+    str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+    str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+    str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+    str = str.replace(/đ/g, "d");    return str;
+}
+
+
 Promise.all([
     $.get("/scripts/grammar.txt"),
     // $.get("http://125.212.207.68/priceservice/company/snapshot")
@@ -81,7 +98,7 @@ Promise.all([
     var symbolInfos = values[1];
 
     // var codes = _.pluck(symbolInfos, "code");
-    var codes = ["VND", "ACB"];
+    var codes = _.map(["VND", "ACB"], (str) => str.toLowerCase());
     var grammar = _.template(values[0])({ stockSymbols: '"' + codes.join('" / "') + '"' });
 
     // TODO: this line takes a looooooooooooong time to finish!
@@ -90,7 +107,8 @@ Promise.all([
 
     DISPATCHER.subscribe("/human", (payload) => {
         try {
-            var tree = parser.parse(payload.message);
+            var text = $.trim(cleanVietnamese(payload.message));
+            var tree = parser.parse(text);
             var result = parseTree(tree);
             DISPATCHER.publish("/processed", {
                 status: "ok",

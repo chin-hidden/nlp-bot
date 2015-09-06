@@ -17,10 +17,10 @@ SUBJ_VP = SUBJ? VP
 YES_NO = YES_NO:(YES / NO) { return ["YES_NO", YES_NO]; }
 
 YES =
-  YES:("dung roi" / "dung" / "uh" / "okay" / "ok" / "yup" / "yeah" / "yes") _ { return ["YES", YES ]; }
+  YES:("dung roi" / "dung the" / "dung" / "uh" / "okay" / "ok" / "yup" / "yeah" / "yes") _ { return ["YES", YES ]; }
 
 NO =
-  NO:("khong phai" / "khong" / "nham roi") { return ["NO", NO ]; }
+  NO:("khong phai" / "khong" / "nham roi" / "sai roi" / "sai") { return ["NO", NO ]; }
 
 SUBJ = SUBJ:NP { return ["SUBJ", SUBJ]; }
 
@@ -40,7 +40,7 @@ VTT = VTT:("muon") _
 
 // động từ hành động
 VHD =
-  VHD:("la" / "dat mua" / "mua" / "ban" / "huy" / "sua" / "chao") _ { return VHD; }
+  VHD:("dat lenh" / "la" / "dat mua" / "mua" / "ban" / "huy" / "sua" / "chao") _ { return VHD; }
 
 V = VTT? V:VHD { return ["V", V]; }
 
@@ -57,24 +57,24 @@ P =
 CLASSIFIER = CLASSIFIER:("con") _ { return {CLASSIFIER: CLASSIFIER}; }
 
 NOUN =
-  NOUN:(STOCK / "gia" / "ma" / "lenh") _ { return ["NOUN", NOUN]; }
+  NOUN:(STOCK / "gia" / "ma" / "lenh" / "cp" / "co phieu" / "co") _ { return ["NOUN", NOUN]; }
 
 STOCK =
-  ("co phieu" / "ma" / "cp")? _ STOCK:(<%= stockSymbols %>) _ { return ["STOCK", STOCK]; }
+  ("co phieu" / "co" / "ma" / "cp")? _ STOCK:(<%= stockSymbols %>) _ { return ["STOCK", STOCK]; }
 
 ADJ =
   ADJ:("vua xong" / "dep") _ { return ["ADJ", ADJ]; }
 
 NUMBER
-    = NUMBER:integer $_ "ngan" _ { NUMBER *= 1000; return ["NUMBER", NUMBER]; }
-    / NUMBER:integer _ { return ["NUMBER", NUMBER]; }
+    = NUMBER:number $_ ("ngan" / "nghin" / "k") _ { NUMBER *= 1000; return ["NUMBER", NUMBER]; }
+    / NUMBER:number _ { return ["NUMBER", NUMBER]; }
 
 // Pronoun
 PRP =
-  PRP:("em yeu" / "toi" / "tao" / "anh" / "em" / "chi" / "minh" / "bo may" / "co" / "di" / "chu" / "bac" / "chau" / "may") _ { return ["PRP", PRP]; }
+  PRP:("mi" / "em yeu" / "toi" / "tao" / "anh" / "em" / "chi" / "minh" / "bo may" / "co" / "di" / "chu" / "bac" / "chau" / "may") _ { return ["PRP", PRP]; }
 
 EXCLAM =
-  EXCLAM:("nhe"/ "voi" / "day" / "di" / "dau") { return ["EXCLAM", EXCLAM]; }
+  EXCLAM:("nhe"/ "voi" / "day" / "di" / "dau" / "cai") { return ["EXCLAM", EXCLAM]; }
 
 CALLING =
   CALLING:(PRP $_ ("oi" / "ah" / "a")) _ { return ["CALLING", CALLING]; }
@@ -83,5 +83,17 @@ _ = [ \t\n\r]*
 __ = [ \t\n\r]+
 
 
-integer "integer"
-    = digits:[0-9]+ { return parseInt(digits.join(""), 10); }
+number "number"
+  = minus? int frac? exp? { return parseFloat(text()); }
+
+decimal_point = "."
+digit1_9      = [1-9]
+e             = [eE]
+exp           = e (minus / plus)? DIGIT+
+frac          = decimal_point DIGIT+
+int           = zero / (digit1_9 DIGIT*)
+minus         = "-"
+plus          = "+"
+zero          = "0"
+
+DIGIT = [0-9]
