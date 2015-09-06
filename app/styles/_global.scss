@@ -71,6 +71,10 @@ header {
 		}
 	}
 
+	&.entering-password .textarea textarea {
+		color: rgba(255, 255, 255, 0);
+	}
+
 	button {
 		background: #f7941d;
 		border: none;

@@ -2,7 +2,7 @@ import {TradeApiClient} from "./trade-api-client";
 import PubSub from "./pubsub";
 import Util from "./util";
 
-var username, password, vtosKeys, vtosChallenges, vtosAttemptCount, tradeApiHelper, accountNo, pPower,
+var username, password, vtosKeys, vtosChallenges, vtosAttemptCount, tradeApiHelper, accountNo, pPower, allDone,
 
     speak = function(status, message) {
         PubSub.publish('/fulfilled', {
@@ -21,9 +21,11 @@ var username, password, vtosKeys, vtosChallenges, vtosAttemptCount, tradeApiHelp
 
     askForPassword = function() {
         speak('good', 'Cám ơn quý khách. <strong>Mật khẩu</strong> của quý khách là gì ạ?');
+        PubSub.publish('/asking-password/start');
     },
 
     setPassword = function(input) {
+        PubSub.publish('/asking-password/end');
         password = input;
     },
 
@@ -79,6 +81,7 @@ var username, password, vtosKeys, vtosChallenges, vtosAttemptCount, tradeApiHelp
         vtosAttemptCount++;
         tradeApiHelper.postVtosAnswer(vtosKeys).done(function(data) {
             speak('good', 'Quý khách đã xác nhận thẻ VTOS thành công!');
+            allDone = true;
             publishAuthDone();
         }).fail(function() {
             speak('bad', 'Xác nhận thẻ VTOS không thành công. Mình thử lại nhé ạ.');
@@ -97,9 +100,15 @@ module.exports = {
     init: function(helper) {
         tradeApiHelper = helper;
         vtosKeys = [];
+        allDone = false;
     },
 
     authenticate: function(data) {
+        if (allDone) {
+            publishAuthDone();
+            return true;
+        }
+
         if (typeof data === 'undefined') {
             askForUsername();
             return false;

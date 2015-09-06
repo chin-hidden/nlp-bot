@@ -4,6 +4,7 @@ import PubSub from "./pubsub";
 import {TradeApiClient} from "./trade-api-client";
 import {INTENT} from "./parser";
 import Authenticator from "./cave-authenticator";
+import TradeApiErrors from "./trade-api-errors";
 
 var botNames = [
         'Hayley Hồ Huyền',
@@ -53,9 +54,13 @@ var botNames = [
         PubSub.subscribe('/processed', function(event) {
             if (event.status === "ok") {
                 if (event.message.intent === INTENT.CONFIRM) {
-                    if (progressPlaceOrderOp(event)) {
-                        speak('good', 'Cảm ơn quý khách, em hiểu rồi ạ.');
-                        Authenticator.authenticate();
+                    if (convoState.currentOperation === INTENT.PLACE_ORDER) {
+                        if (progressPlaceOrderOp(event)) {
+                            speak('good', 'Cảm ơn quý khách, em hiểu rồi ạ.');
+                            Authenticator.authenticate();
+                        }
+                    } else if (typeof convoState.currentOperation === 'undefined') {
+                        speak('good', 'Dạ, em đây ạ.');
                     }
 
                 } else if (event.message.intent === INTENT.DENY) {
@@ -111,28 +116,26 @@ var botNames = [
     // progress with the placing order operation,
     // return true when ready to go
     progressPlaceOrderOp = function(event) {
-        if (convoState.currentOperation === INTENT.PLACE_ORDER) {
-            if (_.every(convoState.orderDetail)) {
-                if (!convoState.confirmed) {
-                    if (event.message.intent === INTENT.CONFIRM) {
-                        convoState.confirmed = true;
-                        return true;
-                    } else {
-                        speak('good', `Quý khách muốn ${convoState.orderDetail.side}
-                            ${convoState.orderDetail.amount} mã ${convoState.orderDetail.symbol}
-                            với giá ${convoState.orderDetail.price} phải không ạ?`);
-                        return false;
-                    }
+        if (_.every(convoState.orderDetail)) {
+            if (!convoState.confirmed) {
+                if (event.message.intent === INTENT.CONFIRM) {
+                    convoState.confirmed = true;
+                    return true;
                 } else {
-                    return true; // good to go!
+                    speak('good', `Quý khách muốn ${convoState.orderDetail.side}
+                        ${convoState.orderDetail.amount} mã ${convoState.orderDetail.symbol}
+                        với giá ${convoState.orderDetail.price} phải không ạ?`);
+                    return false;
                 }
-
             } else {
-                convoState.weAreAskingFor = missingOrderFields()[0];
-                var missingFieldName = orderFieldName(convoState.weAreAskingFor);
-                speak('bad', `Dạ vâng, xin quý khách cho em biết ${missingFieldName} nữa ạ.`);
-                return false;
+                return true; // good to go!
             }
+
+        } else {
+            convoState.weAreAskingFor = missingOrderFields()[0];
+            var missingFieldName = orderFieldName(convoState.weAreAskingFor);
+            speak('bad', `Dạ vâng, xin quý khách cho em biết ${missingFieldName} nữa ạ.`);
+            return false;
         }
     },
 
@@ -170,17 +173,18 @@ var botNames = [
             side: (convoState.orderDetail.side === INTENT.BUYING) ? 'NB' : 'NS',
             symbol: convoState.orderDetail.symbol,
             price: convoState.orderDetail.price,
-            quantity: convoState.orderDetail.amount,
+            quantity: convoState.orderDetail.amount.toString(),
             orderType: 'LO'
 
         }).done(function(data) {
             console.log(data);
-            speak('good', 'Em đang thực hiện đặt lệnh vào hệ thống, quý khách chờ chút xíu ạ.');
+            speak('good', 'Lệnh đặt thành công rồi ạ!');
+            resetState();
 
-        }).fail(function(data) {
-            console.log(data);
+        }).fail(function(jqXHR) {
             speak('bad', 'Có lỗi rồi ạ.');
-
+            speak('bad', TradeApiErrors.getMessage(jqXHR));
+            resetState();
         });
     };
 

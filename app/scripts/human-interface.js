@@ -25,10 +25,16 @@ var $textarea, $conversation, $form, userMessageTmpl, botMessageTmpl, botMessage
 
 	bindUserInput = function() {
 		$form.on('submit', function(e) {
-			var message = $textarea.val();
+			var originalMessage = $textarea.val();
+			
+			var message = originalMessage.replace(' ', '&nbsp;');
+			if ($form.hasClass('entering-password')) {
+				message = message.replace(/./g, '•');
+			}
 			renderHumanMessage(message);
+
 			PubSub.publish('/human-raw', {
-				message: message
+				message: originalMessage
 			});
 			e.preventDefault();
 		});
@@ -75,6 +81,15 @@ var $textarea, $conversation, $form, userMessageTmpl, botMessageTmpl, botMessage
 		PubSub.subscribe('/set-bot', function(data) {
 			botIndex = data.botIndex;
 		});
+	},
+
+	handlePasswordMasking = function() {
+		PubSub.subscribe('/asking-password/start', function() {
+			$form.addClass('entering-password');
+		});
+		PubSub.subscribe('/asking-password/end', function() {
+			$form.removeClass('entering-password');
+		});
 	};
 
 module.exports = {
@@ -90,5 +105,6 @@ module.exports = {
 		triggerSubmitOnHittingEnter();
 		handleBotMessages();
 		handleSetBot();
+		handlePasswordMasking();
 	}
 }
