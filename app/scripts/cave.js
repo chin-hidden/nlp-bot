@@ -4,6 +4,7 @@ import PubSub from "./pubsub";
 import {TradeApiClient} from "./trade-api-client";
 import {INTENT, ORDER_SIDE} from "./parser";
 import Authenticator from "./cave-authenticator";
+import Banter from "./cave-banter";
 import TradeApiErrors from "./trade-api-errors";
 import {addCommasToNumber} from "./util";
 
@@ -149,6 +150,13 @@ var botNames = [
 
     listenToHuman = function() {
         PubSub.subscribe('/human-raw', function(data) {
+
+            // check for banter, flirting and stupid shit user may say
+            var banter = Banter.checkBanter(data.message);
+            if (banter) {
+                speak('good', banter);
+                return;
+            }
 
             // not sure what human is talking about.. let's ask parser
             if (!convoState.currentOperation || !convoState.confirmed) {
