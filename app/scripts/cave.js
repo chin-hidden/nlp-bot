@@ -5,6 +5,7 @@ import {TradeApiClient} from "./trade-api-client";
 import {INTENT, ORDER_SIDE} from "./parser";
 import Authenticator from "./cave-authenticator";
 import TradeApiErrors from "./trade-api-errors";
+import {addCommasToNumber} from "./util";
 
 var botNames = [
         'Hayley Hồ Huyền',
@@ -86,6 +87,11 @@ var botNames = [
                         } else {
                             convoState.orderDetail[convoState.weAreAskingFor] = event.message[convoState.weAreAskingFor];
                         }
+
+                        if (convoState.weAreAskingFor === "price" && event.message.amount < 1000) {
+                            convoState.orderDetail[convoState.weAreAskingFor] *= 1000;
+                        }
+
                         progressPlaceOrderOp(event);
                     }
                 }
