@@ -2,7 +2,7 @@ import $ from "jquery";
 import _ from "underscore";
 import PubSub from "./pubsub";
 import {TradeApiClient} from "./trade-api-client";
-import {INTENT} from "./parser";
+import {INTENT, ORDER_SIDE} from "./parser";
 
 var botNames = [
         'Hayley Hồ Huyền',
@@ -119,9 +119,11 @@ var botNames = [
                         convoState.confirmed = true;
                         return true;
                     } else {
-                        speak('good', `Quý khách muốn ${convoState.orderDetail.side}
-                            ${convoState.orderDetail.amount} mã ${convoState.orderDetail.symbol}
-                            với giá ${convoState.orderDetail.price} phải không ạ?`);
+                        var side = convoState.orderDetail.side === ORDER_SIDE.BUYING ? "mua" : "bán";
+
+                        speak('good', `Quý khách muốn <strong>${side}</strong>
+                            khối lượng <strong>${convoState.orderDetail.amount}</strong> cổ phiếu mã <strong>${convoState.orderDetail.symbol.toUpperCase()}</strong>
+                            với giá <strong>${addCommasToNumber(convoState.orderDetail.price)}‎₫</strong> phải không ạ?`);
                         return false;
                     }
                 } else {
