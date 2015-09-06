@@ -119,19 +119,33 @@ Promise.all([
     DISPATCHER.publish("/parser/ready");
 
     DISPATCHER.subscribe("/human", (payload) => {
-        try {
-            var text = $.trim(cleanVietnamese(payload.message));
-            var tree = parser.parse(text);
-            var result = parseTree(tree);
-            DISPATCHER.publish("/processed", {
-                status: "ok",
-                message: result,
-            });
-        } catch (e) {
-            DISPATCHER.publish("/processed", {
-                status: "parse-error",
-                message: e,
-            });
+        var text = $.trim(cleanVietnamese(payload.message));
+        var retries = 1;
+
+        while (true) {
+            try {
+                var tree = parser.parse(text);
+                var result = parseTree(tree);
+                DISPATCHER.publish("/processed", {
+                    status: "ok",
+                    message: result,
+                });
+
+                break;
+            } catch (e) {
+                if (retries-- == 0) {
+                    DISPATCHER.publish("/processed", {
+                        status: "parse-error",
+                        message: e,
+                    });
+                    break;
+                }
+
+                // hiện tại không thể model câu "cho anh con VND" trong grammar
+                if (text.search("cho anh") != -1) {
+                    text = text.replace("cho anh", "cho anh mua");
+                }
+            }
         }
     });
 });
