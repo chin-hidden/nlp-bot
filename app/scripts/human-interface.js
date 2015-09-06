@@ -9,7 +9,7 @@
 import PubSub from "./pubsub";
 import template from 'microtemplates';
 
-var $textarea, $conversation, $form, userMessageTmpl, botMessageTmpl, botMessagesQueue,
+var $textarea, $conversation, $form, userMessageTmpl, botMessageTmpl, botMessagesQueue, botIndex,
 
 	renderHumanMessage = function(message) {
 		var now = new Date();
@@ -47,7 +47,7 @@ var $textarea, $conversation, $form, userMessageTmpl, botMessageTmpl, botMessage
 	handleBotMessages = function() {
 		PubSub.subscribe('/fulfilled', function(data) {
 			var now = new Date();
-			var $thisMsg = $( template(botMessageTmpl, {message: data.message, botIndex: data.botIndex, time: `${now.getHours()}:${now.getMinutes()}` }) );
+			var $thisMsg = $( template(botMessageTmpl, {message: data.message, botIndex: botIndex, time: `${now.getHours()}:${now.getMinutes()}` }) );
 			botMessagesQueue.push($thisMsg);
 			if (botMessagesQueue.length == 1) {
 				// if the queue is previously empty, then start a new queue
@@ -58,6 +58,7 @@ var $textarea, $conversation, $form, userMessageTmpl, botMessageTmpl, botMessage
 
 	startBotMessagesQueue = function() {
 		var $thisMsg = botMessagesQueue[0];
+		var waitTime = $thisMsg.html().length * 3;
 		$conversation.append($thisMsg.addClass('typing'));
 		scrollToBottom();
 		setTimeout(function() {
@@ -67,7 +68,13 @@ var $textarea, $conversation, $form, userMessageTmpl, botMessageTmpl, botMessage
 			if (botMessagesQueue.length > 0) {
 				startBotMessagesQueue();
 			}
-		}, 1200);
+		}, waitTime);
+	},
+
+	handleSetBot = function() {
+		PubSub.subscribe('/set-bot', function(data) {
+			botIndex = data.botIndex;
+		});
 	};
 
 module.exports = {
@@ -82,5 +89,6 @@ module.exports = {
 		bindUserInput();
 		triggerSubmitOnHittingEnter();
 		handleBotMessages();
+		handleSetBot();
 	}
 }
