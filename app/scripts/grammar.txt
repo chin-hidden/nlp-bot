@@ -9,7 +9,7 @@
 }
 
 S =
-  S:(CALLING / SUBJ_NP / SUBJ_VP / SUBJ / YES_NO) _ EXCLAM? { return ["S", S]; }
+   S:(LAUGHING / SEEK_REAFFIRM / CALLING / SUBJ_NP / HO_TU? SUBJ_VP / SUBJ / YES_NO) _ EXCLAM? { return ["S", S]; }
 
 SUBJ_NP = SUBJ? NP
 SUBJ_VP = SUBJ? VP
@@ -17,10 +17,10 @@ SUBJ_VP = SUBJ? VP
 YES_NO = YES_NO:(YES / NO) { return ["YES_NO", YES_NO]; }
 
 YES =
-  YES:("dung roi" / "dung the" / "dung" / "uh" / "okay" / "ok" / "yup" / "yeah" / "yes") _ { return ["YES", YES ]; }
+  YES:("uh dung roi" / "uh duoc" / "uh ngon" / "vang dung roi" / "dung roi" / "dung the" / "dung" / "uh" / "okay" / "ok" / "yup" / "yeah" / "yes" / "vang") _ { return ["YES", YES ]; }
 
 NO =
-  NO:("khong phai" / "khong" / "nham roi" / "sai roi" / "sai") { return ["NO", NO ]; }
+  NO:("khong sai roi" / "khong nham roi" / "khong phai" / "khong" / "nham roi" / "sai roi" / "sai" / "nah" / "nope" / "no") { return ["NO", NO ]; }
 
 SUBJ = SUBJ:NP { return ["SUBJ", SUBJ]; }
 
@@ -30,7 +30,7 @@ VP
 
 // noun phrase
 NP
-  = NP:(NUMBER? CLASSIFIER? (NOUN / PRP) ADJ* / NUMBER) _
+  = NP:(NUMBER? CLASSIFIER? (PRP / NOUN) ADJ* / NUMBER) _
   {
     return ["NP", NP];
   }
@@ -40,13 +40,13 @@ VTT = VTT:("muon") _
 
 // động từ hành động
 VHD =
-  VHD:("dat lenh" / "la" / "dat mua" / "mua" / "ban" / "huy" / "sua" / "chao") _ { return VHD; }
+  VHD:("dat lenh" / "dat mua" / "dat ban" / "dat" / "mua" / "ban" / "huy" / "sua" / "chao" / "lam duoc" / "lam" / "la" / "biet") _ { return VHD; }
 
 V = VTT? V:VHD { return ["V", V]; }
 
 // Prepositional phrase
 PP =
-  PP:(P / ("cho" / "giup") $_ PRP / "gia" $_ PRICE:NUMBER {return ["PRICE", PRICE]; }) _ {
+  PP:(P / ("cho" / "giup" / "voi") $_ PRP / "gia" $_ PRICE:NUMBER {return ["PRICE", PRICE]; }) _ {
   removeSpace(PP);
   return ["PP", PP];
 }
@@ -71,13 +71,25 @@ NUMBER
 
 // Pronoun
 PRP =
-  PRP:("mi" / "em yeu" / "toi" / "tao" / "anh" / "em" / "chi" / "minh" / "bo may" / "co" / "di" / "chu" / "bac" / "chau" / "may") _ { return ["PRP", PRP]; }
+  PRP:("mi" / "em yeu" / "toi" / "tao" / "anh" / "em" / "chi" / "minh" / "bo may" / "chu" / "bac" / "chau" / "may"/ UNK_PRP) _ { return ["PRP", PRP]; }
+
+UNK_PRP =
+  UNK_PRP:("lam gi" / "cai gi" / "nhung gi" / "gi") _ { return ["UNK_PRP", UNK_PRP]; }
 
 EXCLAM =
-  EXCLAM:("nhe"/ "voi" / "day" / "di" / "dau" / "cai") { return ["EXCLAM", EXCLAM]; }
+  EXCLAM:("the nay" / "the" / "nhe"/ "voi" / "day" / "di" / "dau" / "cai" / "nao" / "ah" / "a") { return ["EXCLAM", EXCLAM]; }
+
+SEEK_REAFFIRM =
+  SEEK_REAFFIRM:("co that khong" / "co that the khong" / "that the khong" / "that khong" / "that the ah" / "that the a" / "the ah" / "the a") { return ["SEEK_REAFFIRM", SEEK_REAFFIRM] }
+
+// hô từ
+HO_TU = HO_TU:("the" / "vay" / "uh thi" / "u thi") _ { return ["HO_TU", HO_TU]; }
 
 CALLING =
   CALLING:(PRP $_ ("oi" / "ah" / "a")) _ { return ["CALLING", CALLING]; }
+
+LAUGHING =
+  LAUGHING:$("ha" "ha"+ "h"?) _ { return ["LAUGHING", LAUGHING]}
 
 _ = [ \t\n\r]*
 __ = [ \t\n\r]+

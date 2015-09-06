@@ -9,7 +9,10 @@ export var INTENT = {
     UPDATE_INFO: "UPDATE_INFO",
     CONFIRM: "CONFIRM",
     DENY: "DENY",
-    GET_ATTENTION: "GET_ATTENTION"
+    GET_ATTENTION: "GET_ATTENTION",
+    ASK_FOR_HELP: "ASK_FOR_HELP",
+    SEEK_REAFFIRM: "SEEK_REAFFIRM",
+    LAUGHING: "LAUGHING"
 };
 
 export var ORDER_SIDE = {
@@ -28,11 +31,9 @@ function parseTree(tree, result) {
         var isTerminal = false;
 
         if (nodeType === "V") {
-            if (node[1] === "dat lenh") {
+            if (_.contains(["dat lenh", "dat"], node[1])) {
                 result.intent = INTENT.PLACE_ORDER;
-            }
-
-            if (_.contains(["mua", "ban"], node[1])) {
+            } else if (_.contains(["mua", "ban"], node[1])) {
                 result.intent = INTENT.PLACE_ORDER;
                 result.side = {
                     "mua": ORDER_SIDE.BUYING,
@@ -61,6 +62,13 @@ function parseTree(tree, result) {
         } else if (nodeType === "CALLING") {
             result.intent = INTENT.GET_ATTENTION;
             isTerminal = true;
+        } else if (nodeType === "UNK_PRP") {
+            result.intent = INTENT.ASK_FOR_HELP;
+            isTerminal = true;
+        } else if (nodeType === "LAUGHING") {
+            result.intent = INTENT.LAUGHING;
+        } else if (nodeType === "SEEK_REAFFIRM") {
+            result.intent = INTENT.SEEK_REAFFIRM;
         }
 
         if (!isTerminal && _.isArray(node)) {

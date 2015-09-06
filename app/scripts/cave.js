@@ -62,18 +62,19 @@ var botNames = [
                 } else if (event.message.intent === INTENT.DENY) {
                     speak('good', "Vâng, tùy quý khách ạ!");
                     resetState();
-
                 } else if (event.message.intent === INTENT.GREETING) {
                     speak('good', "Dạ, em xin kính chào quý khách!");
-
-                } else if (event.message.intent === INTENT.GET_ATTENTION) {
+                } else if (event.message.intent === INTENT.ASK_FOR_HELP) {
+                    speak('good', "Dạ, hiện tại em mới chỉ biết đặt lệnh thôi ạ.");
+                } else if (event.message.intent === INTENT.GET_ATTENTION ||
+                           event.message.intent === INTENT.SEEK_REAFFIRM) {
                     speak('good', "Vâng, thưa quý khách!");
-
                 } else if (event.message.intent === INTENT.PLACE_ORDER) {
                     convoState.currentOperation = event.message.intent;
                     _.extend(convoState.orderDetail, event.message);
                     progressPlaceOrderOp(event);
-
+                } else if (event.message.intent === INTENT.LAUGHING) {
+                    speak('good', "Hohohohoho!");
                 } else if (event.message.intent === INTENT.UPDATE_INFO) {
                     if (convoState.currentOperation === INTENT.PLACE_ORDER) {
                         if (_.contains(["amount", "price"], convoState.weAreAskingFor)) {
@@ -86,7 +87,7 @@ var botNames = [
                 }
 
             } else { // parser fails to understand wtf user wanted
-                speak('bad', 'Xin lỗi, em chưa hiểu ý quý khách. Quý khách vui lòng trả lời lại câu hỏi của em ạ.');
+                speak('bad', 'Xin lỗi, em chưa hiểu ý quý khách. Quý khách vui lòng nói đơn giản hơn được không ạ?');
             }
         });
     },
