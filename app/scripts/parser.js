@@ -27,6 +27,10 @@ function parseTree(tree, result) {
         var nodeType = node[0];
 
         if (nodeType === "V") {
+            if (node[1] === "dat lenh") {
+                result.intent = INTENT.PLACE_ORDER;
+            }
+
             if (_.contains(["mua", "ban"], node[1])) {
                 result.intent = INTENT.PLACE_ORDER;
                 result.side = {
