@@ -94,6 +94,7 @@ var botNames = [
 
     orderFieldName = function(field) {
         return {
+            "side": "mua hay bán",
             "price": "giá",
             "amount": "số lượng",
             "symbol": "mã chứng khoán"
