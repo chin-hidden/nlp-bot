@@ -66,8 +66,8 @@ ADJ =
   ADJ:("vua xong" / "dep") _ { return ["ADJ", ADJ]; }
 
 NUMBER
-    = NUMBER:integer $_ "ngan" _ { NUMBER *= 1000; return ["NUMBER", NUMBER]; }
-    / NUMBER:integer _ { return ["NUMBER", NUMBER]; }
+    = NUMBER:number $_ ("ngan" / "nghin" / "k") _ { NUMBER *= 1000; return ["NUMBER", NUMBER]; }
+    / NUMBER:number _ { return ["NUMBER", NUMBER]; }
 
 // Pronoun
 PRP =
@@ -83,5 +83,17 @@ _ = [ \t\n\r]*
 __ = [ \t\n\r]+
 
 
-integer "integer"
-    = digits:[0-9]+ { return parseInt(digits.join(""), 10); }
+number "number"
+  = minus? int frac? exp? { return parseFloat(text()); }
+
+decimal_point = "."
+digit1_9      = [1-9]
+e             = [eE]
+exp           = e (minus / plus)? DIGIT+
+frac          = decimal_point DIGIT+
+int           = zero / (digit1_9 DIGIT*)
+minus         = "-"
+plus          = "+"
+zero          = "0"
+
+DIGIT = [0-9]
