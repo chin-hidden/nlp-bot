@@ -95,6 +95,8 @@ var botNames = [
 
                         progressPlaceOrderOp(event);
                     }
+                } else if (event.message.intent === INTENT.VIEW_ORDER_LIST) {
+
                 }
 
             } else { // parser fails to understand wtf user wanted

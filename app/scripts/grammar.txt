@@ -40,7 +40,7 @@ VTT = VTT:("muon") _
 
 // động từ hành động
 VHD =
-  VHD:("dat lenh" / "dat mua" / "dat ban" / "dat" / "mua" / "ban" / "huy" / "sua" / "chao" / "lam duoc" / "lam" / "la" / "biet") _ { return VHD; }
+  VHD:("dat lenh" / "dat mua" / "dat ban" / "dat" / "mua" / "ban" / "huy" / "sua" / "chao" / "lam duoc" / "lam" / "la" / "biet" / "xem so lenh" / "xem trang thai lenh") _ { return VHD; }
 
 V = VTT? V:VHD { return ["V", V]; }
 

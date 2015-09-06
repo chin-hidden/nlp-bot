@@ -12,7 +12,8 @@ export var INTENT = {
     GET_ATTENTION: "GET_ATTENTION",
     ASK_FOR_HELP: "ASK_FOR_HELP",
     SEEK_REAFFIRM: "SEEK_REAFFIRM",
-    LAUGHING: "LAUGHING"
+    LAUGHING: "LAUGHING",
+    VIEW_ORDER_LIST: "VIEW_ORDER_LIST"
 };
 
 export var ORDER_SIDE = {
@@ -41,6 +42,8 @@ function parseTree(tree, result) {
                 }[node[1]];
             } else if (node[1] === "chao") {
                 result.intent = INTENT.GREETING;
+            } else if (_.contains(["xem so lenh", "xem trang thai lenh"], node[1])) {
+                result.intent = INTENT.VIEW_ORDER_LIST;
             }
         } else if (nodeType === "STOCK") {
             result.symbol = node[1];
