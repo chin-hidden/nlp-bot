@@ -17,10 +17,10 @@ SUBJ_VP = SUBJ? VP
 YES_NO = YES_NO:(YES / NO) { return ["YES_NO", YES_NO]; }
 
 YES =
-  YES:("dung roi" / "dung" / "uh" / "okay" / "ok" / "yup" / "yeah" / "yes") _ { return ["YES", YES ]; }
+  YES:("dung roi" / "dung the" / "dung" / "uh" / "okay" / "ok" / "yup" / "yeah" / "yes") _ { return ["YES", YES ]; }
 
 NO =
-  NO:("khong phai" / "khong" / "nham roi") { return ["NO", NO ]; }
+  NO:("khong phai" / "khong" / "nham roi" / "sai roi" / "sai") { return ["NO", NO ]; }
 
 SUBJ = SUBJ:NP { return ["SUBJ", SUBJ]; }
 
