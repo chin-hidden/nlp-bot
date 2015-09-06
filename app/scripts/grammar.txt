@@ -57,10 +57,10 @@ P =
 CLASSIFIER = CLASSIFIER:("con") _ { return {CLASSIFIER: CLASSIFIER}; }
 
 NOUN =
-  NOUN:(STOCK / "gia" / "ma" / "lenh") _ { return ["NOUN", NOUN]; }
+  NOUN:(STOCK / "gia" / "ma" / "lenh" / "cp" / "co phieu" / "co") _ { return ["NOUN", NOUN]; }
 
 STOCK =
-  ("co phieu" / "ma" / "cp")? _ STOCK:(<%= stockSymbols %>) _ { return ["STOCK", STOCK]; }
+  ("co phieu" / "co" / "ma" / "cp")? _ STOCK:(<%= stockSymbols %>) _ { return ["STOCK", STOCK]; }
 
 ADJ =
   ADJ:("vua xong" / "dep") _ { return ["ADJ", ADJ]; }
