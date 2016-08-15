@@ -40,10 +40,10 @@ var botNames = [
         convoState = {
             currentOperation: undefined,
             orderDetail: {
+                symbol: undefined,
                 side: undefined,
                 amount: undefined,
-                symbol: undefined,
-                price: undefined,
+                price: undefined
             },
             confirmed: undefined
         };
@@ -103,7 +103,7 @@ var botNames = [
                 }
 
             } else { // parser fails to understand wtf user wanted
-                speak('bad', 'Xin lỗi, em chưa hiểu ý quý khách. Quý khách vui lòng nói đơn giản hơn được không ạ?');
+                speak('bad', 'Xin lỗi, em chưa hiểu ý quý khách. Em có thể giúp gì cho quý khách ạ?');
             }
         });
     },

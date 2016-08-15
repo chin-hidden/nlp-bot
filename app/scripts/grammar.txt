@@ -71,7 +71,7 @@ NUMBER
 
 // Pronoun
 PRP =
-  PRP:("mi" / "em yeu" / "toi" / "tao" / "anh" / "em" / "chi" / "minh" / "bo may" / "chu" / "bac" / "chau" / "may"/ UNK_PRP) _ { return ["PRP", PRP]; }
+  PRP:("minh" / "mi" / "em yeu" / "toi" / "tao" / "anh" / "em" / "chi" / "bo may" / "chu" / "bac" / "chau" / "may"/ UNK_PRP) _ { return ["PRP", PRP]; }
 
 UNK_PRP =
   UNK_PRP:("lam gi" / "cai gi" / "nhung gi" / "gi") _ { return ["UNK_PRP", UNK_PRP]; }
